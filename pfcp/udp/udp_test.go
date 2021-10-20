@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/free5gc/pfcp"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/pfcp/pfcpUdp"
+	"github.com/nctu-ucr/pfcp"
+	"github.com/nctu-ucr/pfcp/pfcpType"
+	"github.com/nctu-ucr/pfcp/pfcpUdp"
 	"github.com/free5gc/smf/context"
 	smf_pfcp "github.com/free5gc/smf/pfcp"
 	"github.com/free5gc/smf/pfcp/udp"
