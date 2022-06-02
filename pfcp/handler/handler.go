@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/free5gc/openapi/models"
-	"github.com/nctu-ucr/pfcp"
-	"github.com/nctu-ucr/pfcp/pfcpType"
-	"github.com/nctu-ucr/pfcp/pfcpUdp"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
 	smf_context "github.com/free5gc/smf/context"
 	"github.com/free5gc/smf/logger"
 	pfcp_message "github.com/free5gc/smf/pfcp/message"

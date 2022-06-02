@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/nctu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/free5gc/smf/context/pool"
 	"github.com/free5gc/smf/factory"
 	"github.com/free5gc/smf/logger"

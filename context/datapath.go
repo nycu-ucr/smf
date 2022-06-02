@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/free5gc/openapi/models"
-	"github.com/nctu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/free5gc/smf/logger"
 	"github.com/free5gc/smf/util"
 	"github.com/free5gc/util_3gpp"

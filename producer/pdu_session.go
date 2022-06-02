@@ -15,7 +15,7 @@ import (
 	"github.com/free5gc/openapi/Nsmf_PDUSession"
 	"github.com/free5gc/openapi/Nudm_SubscriberDataManagement"
 	"github.com/free5gc/openapi/models"
-	"github.com/nctu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/free5gc/smf/consumer"
 	smf_context "github.com/free5gc/smf/context"
 	"github.com/free5gc/smf/logger"

@@ -13,8 +13,8 @@ import (
 	"github.com/free5gc/idgenerator"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/openapi/models"
-	"github.com/nctu-ucr/pfcp/pfcpType"
-	"github.com/nctu-ucr/pfcp/pfcpUdp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
 	"github.com/free5gc/smf/factory"
 	"github.com/free5gc/smf/logger"
 )

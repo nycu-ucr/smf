@@ -3,7 +3,7 @@ package context
 import (
 	"fmt"
 
-	"github.com/nctu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 )
 
 type PFCPSessionResponseStatus int

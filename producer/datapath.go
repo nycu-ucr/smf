@@ -1,7 +1,7 @@
 package producer
 
 import (
-	"github.com/nctu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	smf_context "github.com/free5gc/smf/context"
 	"github.com/free5gc/smf/logger"
 	pfcp_message "github.com/free5gc/smf/pfcp/message"

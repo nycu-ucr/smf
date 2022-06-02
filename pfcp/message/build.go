@@ -3,8 +3,8 @@ package message
 import (
 	"net"
 
-	"github.com/nctu-ucr/pfcp"
-	"github.com/nctu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/free5gc/smf/context"
 	"github.com/free5gc/smf/pfcp/udp"
 )
