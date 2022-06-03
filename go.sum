@@ -208,10 +208,10 @@ github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 h1:W6apQkHrMkS0Muv8G/TipAy/FJl/rCYT0+EuS8+Z0z4=
 github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32/go.mod h1:9wM+0iRr9ahx58uYLpLIr5fm8diHn0JbqRycJi6w0Ms=
-github.com/nctu-ucr/onvmNet v0.0.0-20210117143316-cd80cac36575 h1:GvaRogLFeDaX9KI/fYgFV8gamtmxDptHkeqREy0i18c=
-github.com/nctu-ucr/onvmNet v0.0.0-20210117143316-cd80cac36575/go.mod h1:dGuocFrZCJtmSpawRll+lMcYLHSOlbS6A3e193Xdk/w=
-github.com/nycu-ucr/pfcp v0.0.0-20220602163725-3105ebc0c901 h1:w5x6QRmbGY5W7CEBoR5gOgGxhVANFaWzGCasnL6EChg=
-github.com/nycu-ucr/pfcp v0.0.0-20220602163725-3105ebc0c901/go.mod h1:mYZSP5ZS/8bvpfSOUE5JTs5VX7XExXh7rAopPtOYIkg=
+github.com/nycu-ucr/onvmNet v0.0.0-20220603095325-79bca2f2efde h1:S4mLgnTNvRK6DcYCrDEbOFengwG7piXN6g/pXoFVhJ8=
+github.com/nycu-ucr/onvmNet v0.0.0-20220603095325-79bca2f2efde/go.mod h1:6BGBQ7hktu6WDvT8Rp6qr43UOUM1NpQJ3GR65w8cE8k=
+github.com/nycu-ucr/pfcp v0.0.0-20220603133134-887add8b5f14 h1:PVRAOS516L8HxDj1X1/wZpX5+WWRlzphJF3iO8eg0tk=
+github.com/nycu-ucr/pfcp v0.0.0-20220603133134-887add8b5f14/go.mod h1:qDlo7VjGg5B3KquUuCeWn9DLc4FlkOFnyO2mSc+TZv0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

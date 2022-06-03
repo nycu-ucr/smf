@@ -21,7 +21,7 @@ require (
 	github.com/gin-gonic/gin v1.7.2
 	github.com/google/uuid v1.1.2
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
-	github.com/nycu-ucr/pfcp v0.0.0-20220602163725-3105ebc0c901
+	github.com/nycu-ucr/pfcp v0.0.0-20220603133134-887add8b5f14
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
