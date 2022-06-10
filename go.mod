@@ -29,6 +29,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace github.com/free5gc/pfcp => /home/public/l25gc/onvm-pfcp3.0.5/
-
-replace github.com/free5gc/logger_util => /home/public/l25gc/logger_util/

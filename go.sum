@@ -70,6 +70,8 @@ github.com/free5gc/idgenerator v1.0.0 h1:e55Cn2p8dGCGYv5VoJ6oOsTj3SIVLToNLuS2CDO
 github.com/free5gc/idgenerator v1.0.0/go.mod h1:+iGY7VUgUX88lqPhGAPGy/b2SxtNJMvymdJbNyjk4HU=
 github.com/free5gc/logger_conf v1.0.0 h1:cMqqB8L4HjE57tP36mBmiVUPIcHv8Ayr12jKfeiwqZU=
 github.com/free5gc/logger_conf v1.0.0/go.mod h1:DHecLXVV1qA5Z+lSoUvZdZ6tCtZidTNmtx99jsCfgLE=
+github.com/free5gc/logger_util v1.0.0 h1:hLTCTnKlEqJURrBwooNFQLavWPdJzS0o9KGIYUNKdJI=
+github.com/free5gc/logger_util v1.0.0/go.mod h1:TK/bAJbm/l2TMNmbsKn83+xUmDNqts69IEir/nCa8w0=
 github.com/free5gc/nas v1.0.0 h1:OO4klCGRhflBrOUMyKfFXwxGu5Sz4B8vYrWtIXA1G9Q=
 github.com/free5gc/nas v1.0.0/go.mod h1:aZkA9pzIy6D1I4mTYExoUsr1pBwC81+aLvhs382TlD0=
 github.com/free5gc/ngap v1.0.0/go.mod h1:FIAFElkAuJzusN2kXrCNJlSuCcQid8RZd5qZaf4N7pI=
