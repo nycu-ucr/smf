@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/smf/context"
-	"github.com/free5gc/smf/factory"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/smf/context"
+	"github.com/nycu-ucr/smf/factory"
 )
 
 var configuration = &factory.UserPlaneInformation{

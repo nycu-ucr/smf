@@ -7,8 +7,8 @@ package factory
 import (
 	"time"
 
-	"github.com/free5gc/logger_util"
-	"github.com/free5gc/openapi/models"
+	"github.com/nycu-ucr/logger_util"
+	"github.com/nycu-ucr/openapi/models"
 )
 
 const (

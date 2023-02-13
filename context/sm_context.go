@@ -4,21 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/http"
 	"sync"
 	"sync/atomic"
 
+	"github.com/nycu-ucr/gonet/http"
+
 	"github.com/google/uuid"
 
-	"github.com/free5gc/nas/nasConvert"
-	"github.com/free5gc/nas/nasMessage"
-	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/Namf_Communication"
-	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
-	"github.com/free5gc/openapi/Npcf_SMPolicyControl"
-	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/smf/logger"
+	"github.com/nycu-ucr/nas/nasConvert"
+	"github.com/nycu-ucr/nas/nasMessage"
+	"github.com/nycu-ucr/openapi"
+	"github.com/nycu-ucr/openapi/Namf_Communication"
+	"github.com/nycu-ucr/openapi/Nnrf_NFDiscovery"
+	"github.com/nycu-ucr/openapi/Npcf_SMPolicyControl"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/smf/logger"
 )
 
 var (
@@ -160,7 +161,7 @@ func NewSMContext(identifier string, pduSessID int32) (smContext *SMContext) {
 	return smContext
 }
 
-//*** add unit test ***//
+// *** add unit test ***//
 func GetSMContext(ref string) (smContext *SMContext) {
 	if value, ok := smContextPool.Load(ref); ok {
 		smContext = value.(*SMContext)
@@ -169,7 +170,7 @@ func GetSMContext(ref string) (smContext *SMContext) {
 	return
 }
 
-//*** add unit test ***//
+// *** add unit test ***//
 func RemoveSMContext(ref string) {
 	var smContext *SMContext
 	if value, ok := smContextPool.Load(ref); ok {
@@ -189,7 +190,7 @@ func RemoveSMContext(ref string) {
 	smContextPool.Delete(ref)
 }
 
-//*** add unit test ***//
+// *** add unit test ***//
 func GetSMContextBySEID(SEID uint64) (smContext *SMContext) {
 	if value, ok := seidSMContextMap.Load(SEID); ok {
 		smContext = value.(*SMContext)
@@ -197,7 +198,7 @@ func GetSMContextBySEID(SEID uint64) (smContext *SMContext) {
 	return
 }
 
-//*** add unit test ***//
+// *** add unit test ***//
 func (smContext *SMContext) SetCreateData(createData *models.SmContextCreateData) {
 	smContext.Gpsi = createData.Gpsi
 	smContext.Supi = createData.Supi

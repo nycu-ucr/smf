@@ -6,9 +6,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/free5gc/nas/nasConvert"
-	"github.com/free5gc/openapi/models"
-	smf_context "github.com/free5gc/smf/context"
+	"github.com/nycu-ucr/nas/nasConvert"
+	"github.com/nycu-ucr/openapi/models"
+	smf_context "github.com/nycu-ucr/smf/context"
 )
 
 // SendSMPolicyAssociationCreate create the session management association to the PCF

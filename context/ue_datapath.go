@@ -5,8 +5,8 @@ import (
 	"math"
 
 	"github.com/free5gc/idgenerator"
-	"github.com/free5gc/smf/factory"
-	"github.com/free5gc/smf/logger"
+	"github.com/nycu-ucr/smf/factory"
+	"github.com/nycu-ucr/smf/logger"
 )
 
 type UEPreConfigPaths struct {

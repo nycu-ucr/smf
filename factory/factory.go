@@ -10,7 +10,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/free5gc/smf/logger"
+	"github.com/nycu-ucr/smf/logger"
 )
 
 var (

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/smf/logger"
-	"github.com/free5gc/smf/util"
 	"github.com/free5gc/util_3gpp"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/smf/logger"
+	"github.com/nycu-ucr/smf/util"
 )
 
 // GTPTunnel represents the GTP tunnel information

@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/pfcp"
 	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/free5gc/pfcp/pfcpUdp"
-	smf_context "github.com/free5gc/smf/context"
-	"github.com/free5gc/smf/logger"
-	pfcp_message "github.com/free5gc/smf/pfcp/message"
-	"github.com/free5gc/smf/producer"
+	"github.com/nycu-ucr/openapi/models"
+	smf_context "github.com/nycu-ucr/smf/context"
+	"github.com/nycu-ucr/smf/logger"
+	pfcp_message "github.com/nycu-ucr/smf/pfcp/message"
+	"github.com/nycu-ucr/smf/producer"
 )
 
 func HandlePfcpHeartbeatRequest(msg *pfcpUdp.Message) {

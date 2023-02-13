@@ -2,14 +2,15 @@ package pdusession
 
 import (
 	"log"
-	"net/http"
 
-	"github.com/free5gc/http2_util"
-	"github.com/free5gc/logger_util"
+	"github.com/nycu-ucr/gonet/http"
+
 	"github.com/free5gc/path_util"
-	"github.com/free5gc/smf/logger"
-	"github.com/free5gc/smf/pfcp"
-	"github.com/free5gc/smf/pfcp/udp"
+	"github.com/nycu-ucr/http2_util"
+	"github.com/nycu-ucr/logger_util"
+	"github.com/nycu-ucr/smf/logger"
+	"github.com/nycu-ucr/smf/pfcp"
+	"github.com/nycu-ucr/smf/pfcp/udp"
 )
 
 func DummyServer() {

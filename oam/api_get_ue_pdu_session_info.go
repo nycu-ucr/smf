@@ -1,10 +1,10 @@
 package oam
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/nycu-ucr/gin"
 
-	"github.com/free5gc/http_wrapper"
-	"github.com/free5gc/smf/producer"
+	"github.com/nycu-ucr/http_wrapper"
+	"github.com/nycu-ucr/smf/producer"
 )
 
 func HTTPGetUEPDUSessionInfo(c *gin.Context) {

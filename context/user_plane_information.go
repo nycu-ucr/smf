@@ -11,9 +11,9 @@ import (
 	"sort"
 
 	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/smf/context/pool"
-	"github.com/free5gc/smf/factory"
-	"github.com/free5gc/smf/logger"
+	"github.com/nycu-ucr/smf/context/pool"
+	"github.com/nycu-ucr/smf/factory"
+	"github.com/nycu-ucr/smf/logger"
 )
 
 // UserPlaneInformation store userplane topology

@@ -7,9 +7,9 @@ import (
 	"github.com/free5gc/flowdesc"
 	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/free5gc/pfcp/pfcpUdp"
-	"github.com/free5gc/smf/context"
-	"github.com/free5gc/smf/logger"
-	"github.com/free5gc/smf/pfcp/message"
+	"github.com/nycu-ucr/smf/context"
+	"github.com/nycu-ucr/smf/logger"
+	"github.com/nycu-ucr/smf/pfcp/message"
 )
 
 func AddPDUSessionAnchorAndULCL(smContext *context.SMContext, nodeID pfcpType.NodeID) {

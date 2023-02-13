@@ -10,15 +10,15 @@
 package callback
 
 import (
-	"net/http"
+	"github.com/nycu-ucr/gonet/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/nycu-ucr/gin"
 
-	"github.com/free5gc/http_wrapper"
-	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/smf/logger"
-	"github.com/free5gc/smf/producer"
+	"github.com/nycu-ucr/http_wrapper"
+	"github.com/nycu-ucr/openapi"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/smf/logger"
+	"github.com/nycu-ucr/smf/producer"
 )
 
 // SubscriptionsPost -

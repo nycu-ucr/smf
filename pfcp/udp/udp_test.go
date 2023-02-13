@@ -10,9 +10,9 @@ import (
 	"github.com/free5gc/pfcp"
 	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/free5gc/pfcp/pfcpUdp"
-	"github.com/free5gc/smf/context"
-	smf_pfcp "github.com/free5gc/smf/pfcp"
-	"github.com/free5gc/smf/pfcp/udp"
+	"github.com/nycu-ucr/smf/context"
+	smf_pfcp "github.com/nycu-ucr/smf/pfcp"
+	"github.com/nycu-ucr/smf/pfcp/udp"
 )
 
 const testPfcpClientPort = 12345

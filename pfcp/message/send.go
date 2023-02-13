@@ -6,9 +6,9 @@ import (
 	"github.com/free5gc/pfcp"
 	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/free5gc/pfcp/pfcpUdp"
-	"github.com/free5gc/smf/context"
-	"github.com/free5gc/smf/logger"
-	"github.com/free5gc/smf/pfcp/udp"
+	"github.com/nycu-ucr/smf/context"
+	"github.com/nycu-ucr/smf/logger"
+	"github.com/nycu-ucr/smf/pfcp/udp"
 )
 
 var seq uint32

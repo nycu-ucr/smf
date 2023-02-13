@@ -6,8 +6,8 @@ import (
 
 	"github.com/free5gc/pfcp"
 	"github.com/free5gc/pfcp/pfcpUdp"
-	"github.com/free5gc/smf/context"
-	"github.com/free5gc/smf/logger"
+	"github.com/nycu-ucr/smf/context"
+	"github.com/nycu-ucr/smf/logger"
 )
 
 const MaxPfcpUdpDataSize = 1024

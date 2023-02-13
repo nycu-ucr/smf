@@ -8,14 +8,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
-	"github.com/free5gc/openapi/Nnrf_NFManagement"
-	"github.com/free5gc/openapi/Nudm_SubscriberDataManagement"
-	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/free5gc/pfcp/pfcpUdp"
-	"github.com/free5gc/smf/factory"
-	"github.com/free5gc/smf/logger"
+	"github.com/nycu-ucr/openapi/Nnrf_NFDiscovery"
+	"github.com/nycu-ucr/openapi/Nnrf_NFManagement"
+	"github.com/nycu-ucr/openapi/Nudm_SubscriberDataManagement"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/smf/factory"
+	"github.com/nycu-ucr/smf/logger"
 )
 
 func init() {

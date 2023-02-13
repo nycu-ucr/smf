@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	smf_pfcp "github.com/free5gc/smf/pfcp"
-	"github.com/free5gc/smf/pfcp/message"
-	"github.com/free5gc/smf/pfcp/udp"
+	smf_pfcp "github.com/nycu-ucr/smf/pfcp"
+	"github.com/nycu-ucr/smf/pfcp/message"
+	"github.com/nycu-ucr/smf/pfcp/udp"
 )
 
 func TestSendPfcpAssociationSetupRequest(t *testing.T) {

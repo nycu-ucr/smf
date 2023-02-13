@@ -18,9 +18,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/free5gc/smf/logger"
-	"github.com/free5gc/smf/service"
 	"github.com/free5gc/version"
+	"github.com/nycu-ucr/smf/logger"
+	"github.com/nycu-ucr/smf/service"
 )
 
 var SMF = &service.SMF{}

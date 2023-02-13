@@ -7,8 +7,8 @@ import (
 	"net"
 	"sort"
 
-	"github.com/free5gc/smf/factory"
-	"github.com/free5gc/smf/logger"
+	"github.com/nycu-ucr/smf/factory"
+	"github.com/nycu-ucr/smf/logger"
 )
 
 type UEDefaultPaths struct {
