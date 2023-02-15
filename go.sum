@@ -215,6 +215,8 @@ github.com/nycu-ucr/gonet v0.0.0-20221108134747-494161cf16d6/go.mod h1:RJXqx/AFR
 github.com/nycu-ucr/gonet v0.0.0-20221206181427-d67da1e7556c/go.mod h1:Pv42t+Q6836pXU3n4sT9sU0Tu+lSyZl6pOQPdVN6exs=
 github.com/nycu-ucr/gonet v0.0.0-20230213095244-36b1b1195802 h1:7KzUc6P5Y2wAR1RzPNrKooYJ8Lg6lF+ViF9rUl7ofqM=
 github.com/nycu-ucr/gonet v0.0.0-20230213095244-36b1b1195802/go.mod h1:Pv42t+Q6836pXU3n4sT9sU0Tu+lSyZl6pOQPdVN6exs=
+github.com/nycu-ucr/gonet v0.0.0-20230214053946-2f5515604c06 h1:viScSv73MliO7RBYtaWnvp75by/69SGTh//jCqdcNMc=
+github.com/nycu-ucr/gonet v0.0.0-20230214053946-2f5515604c06/go.mod h1:UtFD3rj0EmxzDcHjOnuFc/4+i/gBQdE4nGU2Nx8gLS4=
 github.com/nycu-ucr/http2_util v0.0.0-20230213074247-99b574560ae4 h1:gXxIqi3gAe+NhL2yCGrcNOWSf9M7E8IBCN8SCKj/2fc=
 github.com/nycu-ucr/http2_util v0.0.0-20230213074247-99b574560ae4/go.mod h1:qdutriB9sDHltAP7wvjoA0JGzBKCwBdD0D9jylS+I/M=
 github.com/nycu-ucr/http_wrapper v0.0.0-20221108133141-f494ef72e89f h1:b6KW4+rpjB7ElLN6xL9gUVYKnGe81SzZ0PxNrN1FlzQ=
