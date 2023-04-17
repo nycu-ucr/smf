@@ -1,8 +1,8 @@
 package context
 
 import (
-	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/free5gc/util_3gpp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 )
 
 const (

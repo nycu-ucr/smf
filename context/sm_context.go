@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/nycu-ucr/nas/nasConvert"
 	"github.com/nycu-ucr/nas/nasMessage"
 	"github.com/nycu-ucr/openapi"
@@ -19,6 +18,7 @@ import (
 	"github.com/nycu-ucr/openapi/Nnrf_NFDiscovery"
 	"github.com/nycu-ucr/openapi/Npcf_SMPolicyControl"
 	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/nycu-ucr/smf/logger"
 )
 

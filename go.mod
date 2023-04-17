@@ -11,7 +11,6 @@ require (
 	github.com/free5gc/logger_conf v1.0.0
 	github.com/free5gc/ngap v1.0.1
 	github.com/free5gc/path_util v1.0.0
-	github.com/free5gc/pfcp v1.0.0
 	github.com/free5gc/util_3gpp v1.0.0
 	github.com/free5gc/version v1.0.0
 	github.com/google/uuid v1.1.2
@@ -23,6 +22,7 @@ require (
 	github.com/nycu-ucr/logger_util v0.0.0-20221108143044-7079981b07b7
 	github.com/nycu-ucr/nas v0.0.0-20230207125714-4154b451b797
 	github.com/nycu-ucr/openapi v0.0.0-20230307121121-a96149972cfe
+	github.com/nycu-ucr/pfcp v0.0.0-20230417064101-7b719bf4094d
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1

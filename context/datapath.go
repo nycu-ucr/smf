@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/free5gc/util_3gpp"
 	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/nycu-ucr/smf/logger"
 	"github.com/nycu-ucr/smf/util"
 )

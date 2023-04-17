@@ -1,8 +1,8 @@
 package pfcp
 
 import (
-	"github.com/free5gc/pfcp"
-	"github.com/free5gc/pfcp/pfcpUdp"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
 	"github.com/nycu-ucr/smf/logger"
 	"github.com/nycu-ucr/smf/pfcp/handler"
 )

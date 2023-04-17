@@ -5,8 +5,8 @@ import (
 	"reflect"
 
 	"github.com/free5gc/flowdesc"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/pfcp/pfcpUdp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
 	"github.com/nycu-ucr/smf/context"
 	"github.com/nycu-ucr/smf/logger"
 	"github.com/nycu-ucr/smf/pfcp/message"

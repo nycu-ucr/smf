@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/free5gc/pfcp"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/pfcp/pfcpUdp"
 	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
 	smf_context "github.com/nycu-ucr/smf/context"
 	"github.com/nycu-ucr/smf/logger"
 	pfcp_message "github.com/nycu-ucr/smf/pfcp/message"

@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/free5gc/idgenerator"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/pfcp/pfcpUdp"
 	"github.com/nycu-ucr/nas/nasMessage"
 	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
 	"github.com/nycu-ucr/smf/factory"
 	"github.com/nycu-ucr/smf/logger"
 )

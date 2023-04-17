@@ -8,7 +8,6 @@ import (
 
 	"github.com/antihax/optional"
 
-	"github.com/free5gc/pfcp/pfcpType"
 	"github.com/nycu-ucr/http_wrapper"
 	"github.com/nycu-ucr/nas"
 	"github.com/nycu-ucr/nas/nasMessage"
@@ -17,6 +16,7 @@ import (
 	"github.com/nycu-ucr/openapi/Nsmf_PDUSession"
 	"github.com/nycu-ucr/openapi/Nudm_SubscriberDataManagement"
 	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/nycu-ucr/smf/consumer"
 	smf_context "github.com/nycu-ucr/smf/context"
 	"github.com/nycu-ucr/smf/logger"
