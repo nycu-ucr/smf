@@ -189,17 +189,22 @@ func HandlePfcpSessionEstablishmentResponse(msg *pfcpUdp.Message) {
 			},
 		}
 
-		rspData, _, err := smContext.
-			CommunicationClient.
-			N1N2MessageCollectionDocumentApi.
-			N1N2MessageTransfer(context.Background(), smContext.Supi, n1n2Request)
-		smContext.SMContextState = smf_context.Active
-		logger.CtxLog.Traceln("SMContextState Change State: ", smContext.SMContextState.String())
-		if err != nil {
-			logger.PfcpLog.Warnf("Send N1N2Transfer failed")
-		}
-		if rspData.Cause == models.N1N2MessageTransferCause_N1_MSG_NOT_TRANSFERRED {
-			logger.PfcpLog.Warnf("%v", rspData.Cause)
+		for {
+			rspData, _, err := smContext.
+				CommunicationClient.
+				N1N2MessageCollectionDocumentApi.
+				N1N2MessageTransfer(context.Background(), smContext.Supi, n1n2Request)
+			smContext.SMContextState = smf_context.Active
+			logger.CtxLog.Traceln("SMContextState Change State: ", smContext.SMContextState.String())
+			if err == nil {
+				break
+			}
+			if err != nil {
+				logger.PfcpLog.Warnf("(HandlePfcpSessionEstablishmentResponse) Send N1N2Transfer failed: %v", err)
+			}
+			if rspData.Cause == models.N1N2MessageTransferCause_N1_MSG_NOT_TRANSFERRED {
+				logger.PfcpLog.Warnf("%v", rspData.Cause)
+			}
 		}
 	}
 
@@ -357,18 +362,23 @@ func HandlePfcpSessionReportRequest(msg *pfcpUdp.Message) {
 				},
 			}
 
-			rspData, _, err := smContext.CommunicationClient.
-				N1N2MessageCollectionDocumentApi.
-				N1N2MessageTransfer(context.Background(), smContext.Supi, n1n2Request)
-			if err != nil {
-				logger.PfcpLog.Warnf("Send N1N2Transfer failed")
-			}
-			if rspData.Cause == models.N1N2MessageTransferCause_ATTEMPTING_TO_REACH_UE {
-				logger.PfcpLog.Infof("Receive %v, AMF is able to page the UE", rspData.Cause)
-			}
-			if rspData.Cause == models.N1N2MessageTransferCause_UE_NOT_RESPONDING {
-				logger.PfcpLog.Warnf("%v", rspData.Cause)
-				// TODO: TS 23.502 4.2.3.3 3c. Failure indication
+			for {
+				rspData, _, err := smContext.CommunicationClient.
+					N1N2MessageCollectionDocumentApi.
+					N1N2MessageTransfer(context.Background(), smContext.Supi, n1n2Request)
+				if err == nil {
+					break
+				}
+				if err != nil {
+					logger.PfcpLog.Warnf("(HandlePfcpSessionReportRequest) Send N1N2Transfer failed: %v", err)
+				}
+				if rspData.Cause == models.N1N2MessageTransferCause_ATTEMPTING_TO_REACH_UE {
+					logger.PfcpLog.Infof("Receive %v, AMF is able to page the UE", rspData.Cause)
+				}
+				if rspData.Cause == models.N1N2MessageTransferCause_UE_NOT_RESPONDING {
+					logger.PfcpLog.Warnf("%v", rspData.Cause)
+					// TODO: TS 23.502 4.2.3.3 3c. Failure indication
+				}
 			}
 		}
 	}
