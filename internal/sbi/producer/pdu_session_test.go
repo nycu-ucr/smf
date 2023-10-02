@@ -1,25 +1,25 @@
 package producer_test
 
 import (
-	"net/http"
+	"github.com/nycu-ucr/gonet/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/h2non/gock.v1"
+	"github.com/nycu-ucr/gock"
 
-	"github.com/free5gc/nas"
-	"github.com/free5gc/nas/nasMessage"
-	"github.com/free5gc/nas/nasType"
-	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/Nsmf_PDUSession"
-	"github.com/free5gc/openapi/models"
+	"github.com/nycu-ucr/nas"
+	"github.com/nycu-ucr/nas/nasMessage"
+	"github.com/nycu-ucr/nas/nasType"
+	"github.com/nycu-ucr/openapi"
+	"github.com/nycu-ucr/openapi/Nsmf_PDUSession"
+	"github.com/nycu-ucr/openapi/models"
 	"github.com/free5gc/smf/internal/context"
 	"github.com/free5gc/smf/internal/pfcp"
 	"github.com/free5gc/smf/internal/pfcp/udp"
 	"github.com/free5gc/smf/internal/sbi/producer"
 	"github.com/free5gc/smf/pkg/factory"
-	"github.com/free5gc/util/httpwrapper"
+	"github.com/nycu-ucr/util/httpwrapper"
 )
 
 var userPlaneConfig = factory.UserPlaneInformation{

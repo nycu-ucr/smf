@@ -2,13 +2,13 @@ package producer
 
 import (
 	"context"
-	"net/http"
+	"github.com/nycu-ucr/gonet/http"
 
-	"github.com/free5gc/openapi/Nsmf_EventExposure"
-	"github.com/free5gc/openapi/models"
+	"github.com/nycu-ucr/openapi/Nsmf_EventExposure"
+	"github.com/nycu-ucr/openapi/models"
 	smf_context "github.com/free5gc/smf/internal/context"
 	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/util/httpwrapper"
+	"github.com/nycu-ucr/util/httpwrapper"
 )
 
 func HandleSMPolicyUpdateNotify(smContextRef string, request models.SmPolicyNotification) *httpwrapper.Response {

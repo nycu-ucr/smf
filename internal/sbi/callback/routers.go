@@ -10,10 +10,10 @@
 package callback
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/nycu-ucr/gin"
 
 	"github.com/free5gc/smf/internal/logger"
-	logger_util "github.com/free5gc/util/logger"
+	logger_util "github.com/nycu-ucr/util/logger"
 )
 
 // Route is the information for every URI.
