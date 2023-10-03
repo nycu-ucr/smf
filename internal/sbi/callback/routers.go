@@ -12,7 +12,7 @@ package callback
 import (
 	"github.com/nycu-ucr/gin"
 
-	"github.com/free5gc/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/logger"
 	logger_util "github.com/nycu-ucr/util/logger"
 )
 

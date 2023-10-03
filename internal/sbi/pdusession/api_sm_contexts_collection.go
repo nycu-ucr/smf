@@ -17,8 +17,8 @@ import (
 
 	"github.com/nycu-ucr/openapi"
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/smf/internal/sbi/producer"
+	"github.com/nycu-ucr/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/sbi/producer"
 	"github.com/nycu-ucr/util/httpwrapper"
 )
 

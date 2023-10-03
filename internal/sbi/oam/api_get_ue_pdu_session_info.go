@@ -3,7 +3,7 @@ package oam
 import (
 	"github.com/nycu-ucr/gin"
 
-	"github.com/free5gc/smf/internal/sbi/producer"
+	"github.com/nycu-ucr/smf/internal/sbi/producer"
 	"github.com/nycu-ucr/util/httpwrapper"
 )
 

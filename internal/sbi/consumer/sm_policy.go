@@ -13,8 +13,8 @@ import (
 	"github.com/nycu-ucr/nas/nasConvert"
 	"github.com/nycu-ucr/nas/nasType"
 	"github.com/nycu-ucr/openapi/models"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
 	"github.com/nycu-ucr/util/flowdesc"
 )
 

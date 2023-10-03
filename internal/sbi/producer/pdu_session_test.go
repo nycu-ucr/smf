@@ -14,11 +14,11 @@ import (
 	"github.com/nycu-ucr/openapi"
 	"github.com/nycu-ucr/openapi/Nsmf_PDUSession"
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/pfcp"
-	"github.com/free5gc/smf/internal/pfcp/udp"
-	"github.com/free5gc/smf/internal/sbi/producer"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/pfcp"
+	"github.com/nycu-ucr/smf/internal/pfcp/udp"
+	"github.com/nycu-ucr/smf/internal/sbi/producer"
+	"github.com/nycu-ucr/smf/pkg/factory"
 	"github.com/nycu-ucr/util/httpwrapper"
 )
 

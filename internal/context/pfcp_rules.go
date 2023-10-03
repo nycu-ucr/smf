@@ -3,7 +3,7 @@ package context
 import (
 	"time"
 
-	"github.com/free5gc/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpType"
 )
 
 const (

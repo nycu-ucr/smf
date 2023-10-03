@@ -8,12 +8,12 @@ import (
 
 	"github.com/nycu-ucr/nas/nasMessage"
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/pfcp"
-	"github.com/free5gc/pfcp/pfcpType"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/smf/internal/pfcp/message"
-	"github.com/free5gc/smf/internal/sbi/producer"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/pfcp/message"
+	"github.com/nycu-ucr/smf/internal/sbi/producer"
 )
 
 func ToBeAssociatedWithUPF(ctx context.Context, upf *smf_context.UPF) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/smf/internal/logger"
+	"github.com/nycu-ucr/smf/pkg/factory"
 	"github.com/nycu-ucr/util/idgenerator"
 )
 

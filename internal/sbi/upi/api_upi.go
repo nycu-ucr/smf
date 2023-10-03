@@ -6,9 +6,9 @@ import (
 
 	"github.com/nycu-ucr/gin"
 
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/pkg/association"
-	"github.com/free5gc/smf/pkg/factory"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/pkg/association"
+	"github.com/nycu-ucr/smf/pkg/factory"
 	"github.com/nycu-ucr/util/httpwrapper"
 )
 

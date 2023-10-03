@@ -7,10 +7,10 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/smf/internal/util"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/util"
+	"github.com/nycu-ucr/smf/pkg/factory"
 )
 
 // Refer to TS 23.501 5.7.4

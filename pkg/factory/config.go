@@ -15,7 +15,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/logger"
 )
 
 const (

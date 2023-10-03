@@ -16,11 +16,11 @@ import (
 	"github.com/nycu-ucr/openapi/Nsmf_PDUSession"
 	"github.com/nycu-ucr/openapi/Nudm_SubscriberDataManagement"
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/pfcp/pfcpType"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/smf/internal/sbi/consumer"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/sbi/consumer"
+	"github.com/nycu-ucr/smf/pkg/factory"
 	"github.com/nycu-ucr/util/httpwrapper"
 )
 

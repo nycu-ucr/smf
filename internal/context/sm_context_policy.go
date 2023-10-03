@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/smf/pkg/factory"
 )
 
 // SM Policy related operation

@@ -5,7 +5,7 @@ import (
 	"github.com/nycu-ucr/nas/nasType"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/smf/internal/util"
+	"github.com/nycu-ucr/smf/internal/util"
 )
 
 // QoSFlow  - Policy and Charging Rule

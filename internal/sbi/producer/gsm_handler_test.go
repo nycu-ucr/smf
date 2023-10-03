@@ -8,7 +8,7 @@ import (
 
 	"github.com/nycu-ucr/nas/nasType"
 	"github.com/nycu-ucr/openapi/models"
-	"github.com/free5gc/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/context"
 	"github.com/nycu-ucr/util/idgenerator"
 )
 

@@ -7,7 +7,7 @@ import (
 	"github.com/nycu-ucr/nas/nasConvert"
 	"github.com/nycu-ucr/nas/nasMessage"
 	"github.com/nycu-ucr/nas/nasType"
-	"github.com/free5gc/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/logger"
 )
 
 func BuildGSMPDUSessionEstablishmentAccept(smContext *SMContext) ([]byte, error) {
