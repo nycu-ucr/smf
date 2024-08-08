@@ -69,8 +69,10 @@ func (r *PCCRule) UpdateDataPathFlowDescription(dlFlowDesc string) error {
 	if dlFlowDesc == "" {
 		return fmt.Errorf("pcc[%s]: no flow description", r.PccRuleId)
 	}
-
-	ulFlowDesc := dlFlowDesc
+	ulFlowDesc := getUplinkFlowDescription(dlFlowDesc)
+	if ulFlowDesc == "" {
+		return fmt.Errorf("pcc[%s]: uplink flow description parsing error", r.PccRuleId)
+	}
 	r.Datapath.UpdateFlowDescription(ulFlowDesc, dlFlowDesc) // UL, DL flow description should be same
 	return nil
 }
@@ -78,13 +80,13 @@ func (r *PCCRule) UpdateDataPathFlowDescription(dlFlowDesc string) error {
 func getUplinkFlowDescription(dlFlowDesc string) string {
 	ulIPFilterRule, err := flowdesc.Decode(dlFlowDesc)
 	if err != nil {
-		return ""
+		return "Decode dlFlowDesc fail"
 	}
 
 	ulIPFilterRule.SwapSrcAndDst()
 	ulFlowDesc, err := flowdesc.Encode(ulIPFilterRule)
 	if err != nil {
-		return ""
+		return "Encode ulFlowDesc fail"
 	}
 	return ulFlowDesc
 }
