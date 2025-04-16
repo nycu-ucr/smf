@@ -8,10 +8,10 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/nycu-ucr/openapi/models"
-	"github.com/nycu-ucr/pfcp/pfcpType"
-	"github.com/nycu-ucr/smf/internal/logger"
-	"github.com/nycu-ucr/smf/pkg/factory"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/pfcp/pfcpType"
+	"github.com/free5gc/smf/internal/logger"
+	"github.com/free5gc/smf/pkg/factory"
 )
 
 // UserPlaneInformation store userplane topology
@@ -148,21 +148,34 @@ func NewUserPlaneInformation(upTopology *factory.UserPlaneInformation) *UserPlan
 							allUEIPPools = append(allUEIPPools, ueIPPool)
 						}
 					}
-					for _, pool := range dnnInfoConfig.StaticPools {
-						ueIPPool := NewUEIPPool(pool)
-						if ueIPPool == nil {
-							logger.InitLog.Fatalf("invalid pools value: %+v", pool)
+					for _, staticPool := range dnnInfoConfig.StaticPools {
+						staticUeIPPool := NewUEIPPool(staticPool)
+						if staticUeIPPool == nil {
+							logger.InitLog.Fatalf("invalid pools value: %+v", staticPool)
 						} else {
-							staticUeIPPools = append(staticUeIPPools, ueIPPool)
+							staticUeIPPools = append(staticUeIPPools, staticUeIPPool)
 							for _, dynamicUePool := range ueIPPools {
-								if dynamicUePool.ueSubNet.Contains(ueIPPool.ueSubNet.IP) {
-									if err := dynamicUePool.exclude(ueIPPool); err != nil {
+								if dynamicUePool.ueSubNet.Contains(staticUeIPPool.ueSubNet.IP) {
+									if err := dynamicUePool.Exclude(staticUeIPPool); err != nil {
 										logger.InitLog.Fatalf("exclude static Pool[%s] failed: %v",
-											ueIPPool.ueSubNet, err)
+											staticUeIPPool.ueSubNet, err)
 									}
 								}
 							}
 						}
+					}
+					for _, pool := range ueIPPools {
+						if pool.pool.Min() != pool.pool.Max() {
+							if err := pool.pool.Reserve(pool.pool.Min(), pool.pool.Min()); err != nil {
+								logger.InitLog.Errorf("Remove network address failed for %s: %s", pool.ueSubNet.String(), err)
+							}
+							if err := pool.pool.Reserve(pool.pool.Max(), pool.pool.Max()); err != nil {
+								logger.InitLog.Errorf("Remove network address failed for %s: %s", pool.ueSubNet.String(), err)
+							}
+						}
+						logger.InitLog.Debugf("%d-%s %s %s",
+							snssaiInfo.SNssai.Sst, snssaiInfo.SNssai.Sd,
+							dnnInfoConfig.Dnn, pool.dump())
 					}
 					snssaiInfo.DnnList = append(snssaiInfo.DnnList, &DnnUPFInfoItem{
 						Dnn:             dnnInfoConfig.Dnn,
@@ -413,7 +426,7 @@ func (upi *UserPlaneInformation) UpNodesFromConfiguration(upTopology *factory.Us
 							staticUeIPPools = append(staticUeIPPools, ueIPPool)
 							for _, dynamicUePool := range ueIPPools {
 								if dynamicUePool.ueSubNet.Contains(ueIPPool.ueSubNet.IP) {
-									if err := dynamicUePool.exclude(ueIPPool); err != nil {
+									if err := dynamicUePool.Exclude(ueIPPool); err != nil {
 										logger.InitLog.Fatalf("exclude static Pool[%s] failed: %v",
 											ueIPPool.ueSubNet, err)
 									}
@@ -748,7 +761,7 @@ func getPathBetween(cur *UPNode, dest *UPNode, visited map[*UPNode]bool,
 		path = make([]*UPNode, 0)
 		path = append(path, cur)
 		pathExist = true
-		return
+		return path, pathExist
 	}
 
 	selectedSNssai := selection.SNssai
@@ -760,16 +773,14 @@ func getPathBetween(cur *UPNode, dest *UPNode, visited map[*UPNode]bool,
 				continue
 			}
 
-			path_tail, path_exist := getPathBetween(node, dest, visited, selection)
-
-			if path_exist {
+			path_tail, pathExistBuf := getPathBetween(node, dest, visited, selection)
+			pathExist = pathExistBuf
+			if pathExist {
 				path = make([]*UPNode, 0)
 				path = append(path, cur)
-
 				path = append(path, path_tail...)
-				pathExist = true
 
-				return
+				return path, pathExist
 			}
 		}
 	}
@@ -862,11 +873,11 @@ func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionPa
 	for _, upf := range sortedUPFList {
 		logger.CtxLog.Debugf("check start UPF: %s",
 			upi.GetUPFNameByIp(upf.NodeID.ResolveNodeIdToIp().String()))
-		if upf.UPF.UPFStatus != AssociatedSetUpSuccess {
-			logger.CtxLog.Infof("PFCP Association not yet Established with: %s",
-				upi.GetUPFNameByIp(upf.NodeID.ResolveNodeIdToIp().String()))
+		if err = upf.UPF.IsAssociated(); err != nil {
+			logger.CtxLog.Infoln(err)
 			continue
 		}
+
 		pools, useStaticIPPool := getUEIPPool(upf, selection)
 		if len(pools) == 0 {
 			continue
@@ -874,7 +885,7 @@ func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionPa
 		sortedPoolList := createPoolListForSelection(pools)
 		for _, pool := range sortedPoolList {
 			logger.CtxLog.Debugf("check start UEIPPool(%+v)", pool.ueSubNet)
-			addr := pool.allocate(selection.PDUAddress)
+			addr := pool.Allocate(selection.PDUAddress)
 			if addr != nil {
 				logger.CtxLog.Infof("Selected UPF: %s",
 					upi.GetUPFNameByIp(upf.NodeID.ResolveNodeIdToIp().String()))
@@ -952,7 +963,7 @@ func (upi *UserPlaneInformation) ReleaseUEIP(upf *UPNode, addr net.IP, static bo
 			upi.GetUPFNameByIp(upf.NodeID.ResolveNodeIdToIp().String()), addr)
 		return
 	}
-	pool.release(addr)
+	pool.Release(addr)
 }
 
 func findPoolByAddr(upf *UPNode, addr net.IP, static bool) *UeIPPool {

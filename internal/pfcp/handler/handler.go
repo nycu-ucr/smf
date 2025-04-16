@@ -1,16 +1,16 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/nycu-ucr/openapi/models"
-	"github.com/nycu-ucr/pfcp"
-	"github.com/nycu-ucr/pfcp/pfcpType"
-	"github.com/nycu-ucr/pfcp/pfcpUdp"
-	smf_context "github.com/nycu-ucr/smf/internal/context"
-	"github.com/nycu-ucr/smf/internal/logger"
-	pfcp_message "github.com/nycu-ucr/smf/internal/pfcp/message"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/pfcp"
+	"github.com/free5gc/pfcp/pfcpType"
+	"github.com/free5gc/pfcp/pfcpUdp"
+	smf_context "github.com/free5gc/smf/internal/context"
+	"github.com/free5gc/smf/internal/logger"
+	pfcp_message "github.com/free5gc/smf/internal/pfcp/message"
+	"github.com/free5gc/smf/pkg/service"
 )
 
 func HandlePfcpHeartbeatRequest(msg *pfcpUdp.Message) {
@@ -38,8 +38,6 @@ func HandlePfcpAssociationSetupRequest(msg *pfcpUdp.Message) {
 		logger.PfcpLog.Errorf("can't find UPF[%s]", nodeID.ResolveNodeIdToIp().String())
 		return
 	}
-
-	upf.UPIPInfo = *req.UserPlaneIPResourceInformation
 
 	// Response with PFCP Association Setup Response
 	cause := pfcpType.Cause{
@@ -124,12 +122,10 @@ func HandlePfcpSessionReportRequest(msg *pfcpUdp.Message) {
 		pfcp_message.SendPfcpSessionReportResponse(msg.RemoteAddr, cause, seqFromUPF, 0)
 		return
 	}
-	if upf.UPFStatus != smf_context.AssociatedSetUpSuccess {
-		logger.PfcpLog.Warnf("PFCP Session Report Request : Not Associated with UPF[%s], Request Rejected",
-			upfNodeIDtoIPStr)
+	if err := upf.IsAssociated(); err != nil {
+		logger.PfcpLog.Warnf("PFCP Session Report Request rejected: %+v", err)
 		cause.CauseValue = pfcpType.CauseNoEstablishedPfcpAssociation
 		pfcp_message.SendPfcpSessionReportResponse(msg.RemoteAddr, cause, seqFromUPF, 0)
-		return
 	}
 
 	if smContext.UpCnxState == models.UpCnxState_DEACTIVATED {
@@ -163,7 +159,7 @@ func HandlePfcpSessionReportRequest(msg *pfcpUdp.Message) {
 					SmInfo: &models.N2SmInformation{
 						PduSessionId: smContext.PDUSessionID,
 						N2InfoContent: &models.N2InfoContent{
-							NgapIeType: models.NgapIeType_PDU_RES_SETUP_REQ,
+							NgapIeType: models.AmfCommunicationNgapIeType_PDU_RES_SETUP_REQ,
 							NgapData: &models.RefToBinaryData{
 								ContentId: "N2SmInformation",
 							},
@@ -173,12 +169,18 @@ func HandlePfcpSessionReportRequest(msg *pfcpUdp.Message) {
 				},
 			}
 
-			rspData, _, err := smContext.CommunicationClient.
-				N1N2MessageCollectionDocumentApi.
-				N1N2MessageTransfer(context.Background(), smContext.Supi, n1n2Request)
-			if err != nil {
-				logger.PfcpLog.Warnf("Send N1N2Transfer failed: %s", err)
+			ctx, _, errToken := smf_context.GetSelf().GetTokenCtx(models.ServiceName_NAMF_COMM, models.NrfNfManagementNfType_AMF)
+			if errToken != nil {
+				logger.PfcpLog.Warnf("Get NAMF_COMM context failed: %s", errToken)
+				return
 			}
+			rspData, err := service.GetApp().Consumer().
+				N1N2MessageTransfer(ctx, smContext.Supi, n1n2Request, smContext.CommunicationClientApiPrefix)
+			if err != nil {
+				logger.ConsumerLog.Warnf("Send N1N2Transfer failed: %s", err)
+				return
+			}
+
 			if rspData.Cause == models.N1N2MessageTransferCause_ATTEMPTING_TO_REACH_UE {
 				logger.PfcpLog.Infof("Receive %v, AMF is able to page the UE", rspData.Cause)
 			}
@@ -190,54 +192,14 @@ func HandlePfcpSessionReportRequest(msg *pfcpUdp.Message) {
 	}
 
 	if req.ReportType.Usar && req.UsageReport != nil {
-		HandleReports(req.UsageReport, nil, nil, smContext, upfNodeID)
+		smContext.HandleReports(req.UsageReport, nil, nil, upfNodeID, "")
+		// After receiving the Usage Report, it should send charging request to the CHF
+		// and update the URR with the quota or other charging information according to
+		// the charging response
+		service.GetApp().Processor().ReportUsageAndUpdateQuota(smContext)
 	}
 
 	// TS 23.502 4.2.3.3 2b. Send Data Notification Ack, SMF->UPF
 	cause.CauseValue = pfcpType.CauseRequestAccepted
 	pfcp_message.SendPfcpSessionReportResponse(msg.RemoteAddr, cause, seqFromUPF, remoteSEID)
-}
-
-func HandleReports(
-	UsageReportReport []*pfcp.UsageReportPFCPSessionReportRequest,
-	UsageReportModification []*pfcp.UsageReportPFCPSessionModificationResponse,
-	UsageReportDeletion []*pfcp.UsageReportPFCPSessionDeletionResponse,
-	smContext *smf_context.SMContext,
-	nodeId pfcpType.NodeID,
-) {
-	var usageReport smf_context.UsageReport
-
-	for _, report := range UsageReportReport {
-		usageReport.UrrId = report.URRID.UrrIdValue
-		usageReport.TotalVolume = report.VolumeMeasurement.TotalVolume
-		usageReport.UplinkVolume = report.VolumeMeasurement.UplinkVolume
-		usageReport.DownlinkVolume = report.VolumeMeasurement.DownlinkVolume
-		usageReport.TotalPktNum = report.VolumeMeasurement.TotalPktNum
-		usageReport.UplinkPktNum = report.VolumeMeasurement.UplinkPktNum
-		usageReport.DownlinkPktNum = report.VolumeMeasurement.DownlinkPktNum
-
-		smContext.UrrReports = append(smContext.UrrReports, usageReport)
-	}
-	for _, report := range UsageReportModification {
-		usageReport.UrrId = report.URRID.UrrIdValue
-		usageReport.TotalVolume = report.VolumeMeasurement.TotalVolume
-		usageReport.UplinkVolume = report.VolumeMeasurement.UplinkVolume
-		usageReport.DownlinkVolume = report.VolumeMeasurement.DownlinkVolume
-		usageReport.TotalPktNum = report.VolumeMeasurement.TotalPktNum
-		usageReport.UplinkPktNum = report.VolumeMeasurement.UplinkPktNum
-		usageReport.DownlinkPktNum = report.VolumeMeasurement.DownlinkPktNum
-
-		smContext.UrrReports = append(smContext.UrrReports, usageReport)
-	}
-	for _, report := range UsageReportDeletion {
-		usageReport.UrrId = report.URRID.UrrIdValue
-		usageReport.TotalVolume = report.VolumeMeasurement.TotalVolume
-		usageReport.UplinkVolume = report.VolumeMeasurement.UplinkVolume
-		usageReport.DownlinkVolume = report.VolumeMeasurement.DownlinkVolume
-		usageReport.TotalPktNum = report.VolumeMeasurement.TotalPktNum
-		usageReport.UplinkPktNum = report.VolumeMeasurement.UplinkPktNum
-		usageReport.DownlinkPktNum = report.VolumeMeasurement.DownlinkPktNum
-
-		smContext.UrrReports = append(smContext.UrrReports, usageReport)
-	}
 }

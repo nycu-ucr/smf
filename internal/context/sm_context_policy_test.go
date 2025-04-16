@@ -1,12 +1,14 @@
-package context
+package context_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/nycu-ucr/openapi/models"
-	"github.com/nycu-ucr/smf/pkg/factory"
+	"github.com/free5gc/openapi/models"
+	smf_context "github.com/free5gc/smf/internal/context"
+	"github.com/free5gc/smf/pkg/factory"
 )
 
 var userPlaneConfig = factory.UserPlaneInformation{
@@ -98,11 +100,18 @@ var testConfig = factory.Config{
 		Description: "SMF procdeure test configuration",
 	},
 	Configuration: &factory.Configuration{
+		Sbi: &factory.Sbi{
+			Scheme:       "http",
+			RegisterIPv4: "127.0.0.1",
+			BindingIPv4:  "127.0.0.1",
+			Port:         8000,
+		},
 		UserPlaneInformation: userPlaneConfig,
 	},
 }
 
 func initConfig() {
+	smf_context.InitSmfContext(&testConfig)
 	factory.SmfConfig = &testConfig
 }
 
@@ -113,7 +122,7 @@ func TestApplySessionRules(t *testing.T) {
 		name              string
 		decision          *models.SmPolicyDecision
 		noErr             bool
-		expectedSessRules map[string]*SessionRule
+		expectedSessRules map[string]*smf_context.SessionRule
 	}{
 		{
 			name:  "nil decision",
@@ -139,7 +148,7 @@ func TestApplySessionRules(t *testing.T) {
 					},
 				},
 			},
-			expectedSessRules: map[string]*SessionRule{
+			expectedSessRules: map[string]*smf_context.SessionRule{
 				"SessRuleId-1": {
 					SessionRule: &models.SessionRule{
 						AuthSessAmbr: &models.Ambr{
@@ -180,7 +189,7 @@ func TestApplySessionRules(t *testing.T) {
 					},
 				},
 			},
-			expectedSessRules: map[string]*SessionRule{
+			expectedSessRules: map[string]*smf_context.SessionRule{
 				"SessRuleId-1": {
 					SessionRule: &models.SessionRule{
 						AuthSessAmbr: &models.Ambr{
@@ -238,7 +247,7 @@ func TestApplySessionRules(t *testing.T) {
 					},
 				},
 			},
-			expectedSessRules: map[string]*SessionRule{
+			expectedSessRules: map[string]*smf_context.SessionRule{
 				"SessRuleId-1": {
 					SessionRule: &models.SessionRule{
 						AuthSessAmbr: &models.Ambr{
@@ -283,7 +292,7 @@ func TestApplySessionRules(t *testing.T) {
 					"SessRuleId-1": nil,
 				},
 			},
-			expectedSessRules: map[string]*SessionRule{
+			expectedSessRules: map[string]*smf_context.SessionRule{
 				"SessRuleId-2": {
 					SessionRule: &models.SessionRule{
 						AuthSessAmbr: &models.Ambr{
@@ -316,7 +325,7 @@ func TestApplySessionRules(t *testing.T) {
 		},
 	}
 
-	smctx := NewSMContext("imsi-208930000000001", 10)
+	smctx := smf_context.NewSMContext("imsi-208930000000001", 10)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -338,9 +347,9 @@ func TestApplyPccRules(t *testing.T) {
 		name             string
 		decision         *models.SmPolicyDecision
 		noErr            bool
-		expectedPCCRules map[string]*PCCRule
+		expectedPCCRules map[string]*smf_context.PCCRule
 		expectedQosDatas map[string]*models.QosData
-		expectedTcDatas  map[string]*TrafficControlData
+		expectedTcDatas  map[string]*smf_context.TrafficControlData
 	}{
 		{
 			name:  "nil decision",
@@ -370,7 +379,7 @@ func TestApplyPccRules(t *testing.T) {
 				TraffContDecs: map[string]*models.TrafficControlData{
 					"TcId-1": {
 						TcId: "TcId-1",
-						RouteToLocs: []models.RouteToLocation{
+						RouteToLocs: []*models.RouteToLocation{
 							{
 								Dnai: "mec",
 							},
@@ -378,7 +387,7 @@ func TestApplyPccRules(t *testing.T) {
 					},
 				},
 			},
-			expectedPCCRules: map[string]*PCCRule{
+			expectedPCCRules: map[string]*smf_context.PCCRule{
 				"PccRuleId-1": {
 					PccRule: &models.PccRule{
 						FlowInfos: []models.FlowInformation{
@@ -398,11 +407,11 @@ func TestApplyPccRules(t *testing.T) {
 					QosId: "QosId-1",
 				},
 			},
-			expectedTcDatas: map[string]*TrafficControlData{
+			expectedTcDatas: map[string]*smf_context.TrafficControlData{
 				"TcId-1": {
 					TrafficControlData: &models.TrafficControlData{
 						TcId: "TcId-1",
-						RouteToLocs: []models.RouteToLocation{
+						RouteToLocs: []*models.RouteToLocation{
 							{
 								Dnai: "mec",
 							},
@@ -434,7 +443,7 @@ func TestApplyPccRules(t *testing.T) {
 					},
 				},
 			},
-			expectedPCCRules: map[string]*PCCRule{
+			expectedPCCRules: map[string]*smf_context.PCCRule{
 				"PccRuleId-1": {
 					PccRule: &models.PccRule{
 						FlowInfos: []models.FlowInformation{
@@ -470,11 +479,11 @@ func TestApplyPccRules(t *testing.T) {
 					QosId: "QosId-2",
 				},
 			},
-			expectedTcDatas: map[string]*TrafficControlData{
+			expectedTcDatas: map[string]*smf_context.TrafficControlData{
 				"TcId-1": {
 					TrafficControlData: &models.TrafficControlData{
 						TcId: "TcId-1",
-						RouteToLocs: []models.RouteToLocation{
+						RouteToLocs: []*models.RouteToLocation{
 							{
 								Dnai: "mec",
 							},
@@ -506,7 +515,7 @@ func TestApplyPccRules(t *testing.T) {
 					},
 				},
 			},
-			expectedPCCRules: map[string]*PCCRule{
+			expectedPCCRules: map[string]*smf_context.PCCRule{
 				"PccRuleId-1": {
 					PccRule: &models.PccRule{
 						FlowInfos: []models.FlowInformation{
@@ -542,11 +551,11 @@ func TestApplyPccRules(t *testing.T) {
 					QosId: "QosId-3",
 				},
 			},
-			expectedTcDatas: map[string]*TrafficControlData{
+			expectedTcDatas: map[string]*smf_context.TrafficControlData{
 				"TcId-1": {
 					TrafficControlData: &models.TrafficControlData{
 						TcId: "TcId-1",
-						RouteToLocs: []models.RouteToLocation{
+						RouteToLocs: []*models.RouteToLocation{
 							{
 								Dnai: "mec",
 							},
@@ -563,7 +572,7 @@ func TestApplyPccRules(t *testing.T) {
 					"PccRuleId-2": nil,
 				},
 			},
-			expectedPCCRules: map[string]*PCCRule{
+			expectedPCCRules: map[string]*smf_context.PCCRule{
 				"PccRuleId-1": {
 					PccRule: &models.PccRule{
 						FlowInfos: []models.FlowInformation{
@@ -583,11 +592,11 @@ func TestApplyPccRules(t *testing.T) {
 					QosId: "QosId-3",
 				},
 			},
-			expectedTcDatas: map[string]*TrafficControlData{
+			expectedTcDatas: map[string]*smf_context.TrafficControlData{
 				"TcId-1": {
 					TrafficControlData: &models.TrafficControlData{
 						TcId: "TcId-1",
-						RouteToLocs: []models.RouteToLocation{
+						RouteToLocs: []*models.RouteToLocation{
 							{
 								Dnai: "mec",
 							},
@@ -604,25 +613,25 @@ func TestApplyPccRules(t *testing.T) {
 					"PccRuleId-1": nil,
 				},
 			},
-			expectedPCCRules: map[string]*PCCRule{},
+			expectedPCCRules: map[string]*smf_context.PCCRule{},
 			expectedQosDatas: map[string]*models.QosData{},
-			expectedTcDatas:  map[string]*TrafficControlData{},
+			expectedTcDatas:  map[string]*smf_context.TrafficControlData{},
 			noErr:            true,
 		},
 	}
 
-	smfContext := GetSelf()
-	smfContext.UserPlaneInformation = NewUserPlaneInformation(&userPlaneConfig)
+	smfContext := smf_context.GetSelf()
+	smfContext.UserPlaneInformation = smf_context.NewUserPlaneInformation(&userPlaneConfig)
 	for _, n := range smfContext.UserPlaneInformation.UPFs {
-		n.UPF.UPFStatus = AssociatedSetUpSuccess
+		n.UPF.AssociationContext = context.Background()
 	}
 
-	smctx := NewSMContext("imsi-208930000000002", 10)
+	smctx := smf_context.NewSMContext("imsi-208930000000002", 10)
 
 	smctx.SMLock.Lock()
 	defer smctx.SMLock.Unlock()
 
-	smctx.SmContextCreateData = &models.SmContextCreateData{
+	smctx.SmfPduSessionSmContextCreateData = &models.SmfPduSessionSmContextCreateData{
 		Supi:         "imsi-208930000000002",
 		Pei:          "imeisv-1110000000000000",
 		Gpsi:         "msisdn-0900000000",
@@ -634,20 +643,20 @@ func TestApplyPccRules(t *testing.T) {
 		},
 		ServingNfId: "c8d0ee65-f466-48aa-a42f-235ec771cb52",
 		Guami: &models.Guami{
-			PlmnId: &models.PlmnId{
+			PlmnId: &models.PlmnIdNid{
 				Mcc: "208",
 				Mnc: "93",
 			},
 			AmfId: "cafe00",
 		},
 		AnType: "3GPP_ACCESS",
-		ServingNetwork: &models.PlmnId{
+		ServingNetwork: &models.PlmnIdNid{
 			Mcc: "208",
 			Mnc: "93",
 		},
 	}
 	smctx.SelectedPDUSessionType = 1
-	smctx.SessionRules["SessRuleId-1"] = &SessionRule{
+	smctx.SessionRules["SessRuleId-1"] = &smf_context.SessionRule{
 		SessionRule: &models.SessionRule{
 			AuthSessAmbr: &models.Ambr{
 				Uplink:   "1000 Kbps",
@@ -664,6 +673,12 @@ func TestApplyPccRules(t *testing.T) {
 		},
 	}
 	smctx.SelectedSessionRuleID = "SessRuleId-1"
+	smctx.DnnConfiguration = models.DnnConfiguration{
+		SessionAmbr: &models.Ambr{
+			Uplink:   "1 Gbps",
+			Downlink: "1 Gbps",
+		},
+	}
 	err := smctx.AllocUeIP()
 	require.NoError(t, err)
 	err = smctx.SelectDefaultDataPath()
@@ -671,7 +686,7 @@ func TestApplyPccRules(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := smctx.ApplyPccRules(tc.decision)
+			err = smctx.ApplyPccRules(tc.decision)
 			if tc.noErr {
 				require.NoError(t, err)
 			} else {

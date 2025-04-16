@@ -4,7 +4,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/nycu-ucr/openapi/models"
+	"github.com/free5gc/openapi/models"
 )
 
 type SNssai struct {

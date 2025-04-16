@@ -7,8 +7,8 @@ import (
 	"net"
 	"sort"
 
-	"github.com/nycu-ucr/smf/internal/logger"
-	"github.com/nycu-ucr/smf/pkg/factory"
+	"github.com/free5gc/smf/internal/logger"
+	"github.com/free5gc/smf/pkg/factory"
 )
 
 type UEDefaultPaths struct {
@@ -19,6 +19,8 @@ type UEDefaultPaths struct {
 type DefaultPathPool map[string]*DataPath // key: UPF name
 
 func NewUEDefaultPaths(upi *UserPlaneInformation, topology []factory.UPLink) (*UEDefaultPaths, error) {
+	logger.MainLog.Traceln("In NewUEDefaultPaths")
+
 	defaultPathPool := make(map[string]*DataPath)
 	source, err := findSourceInTopology(upi, topology)
 	if err != nil {
@@ -29,9 +31,9 @@ func NewUEDefaultPaths(upi *UserPlaneInformation, topology []factory.UPLink) (*U
 		return nil, err
 	}
 	for _, destination := range destinations {
-		path, err := generateDefaultDataPath(source, destination, topology)
-		if err != nil {
-			return nil, err
+		path, errgenerate := generateDefaultDataPath(source, destination, topology)
+		if errgenerate != nil {
+			return nil, errgenerate
 		}
 		defaultPathPool[destination] = path
 	}
@@ -198,7 +200,7 @@ func (dfp *UEDefaultPaths) SelectUPFAndAllocUEIPForULCL(upi *UserPlaneInformatio
 		sortedPoolList := createPoolListForSelection(pools)
 		for _, pool := range sortedPoolList {
 			logger.CtxLog.Debugf("check start UEIPPool(%+v)", pool.ueSubNet)
-			addr := pool.allocate(selection.PDUAddress)
+			addr := pool.Allocate(selection.PDUAddress)
 			if addr != nil {
 				logger.CtxLog.Infof("Selected UPF: %s", upfName)
 				return upfName, addr, useStaticIPPool

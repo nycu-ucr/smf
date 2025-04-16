@@ -7,11 +7,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nycu-ucr/nas/nasType"
-	"github.com/nycu-ucr/openapi/models"
-	"github.com/nycu-ucr/smf/internal/logger"
-	"github.com/nycu-ucr/smf/pkg/factory"
-	"github.com/nycu-ucr/util/flowdesc"
+	"github.com/free5gc/nas/nasType"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/smf/internal/logger"
+	"github.com/free5gc/smf/pkg/factory"
+	"github.com/free5gc/util/flowdesc"
 )
 
 // PCCRule - Policy and Charging Rule
@@ -41,6 +41,14 @@ func (r *PCCRule) FlowDescription() string {
 	return ""
 }
 
+func (r *PCCRule) RefChgDataID() string {
+	if len(r.RefChgData) > 0 {
+		// now 1 pcc rule only maps to 1 Charging data
+		return r.RefChgData[0]
+	}
+	return ""
+}
+
 func (r *PCCRule) RefQosDataID() string {
 	if len(r.RefQosData) > 0 {
 		// now 1 pcc rule only maps to 1 QoS data
@@ -61,6 +69,22 @@ func (r *PCCRule) RefTcDataID() string {
 	return ""
 }
 
+func (r *PCCRule) IdentifyChargingLevel() (ChargingLevel, error) {
+	dlIPFilterRule, err := flowdesc.Decode(r.FlowDescription())
+	if err != nil {
+		return 0, err
+	}
+	// For the PCC rule that are applicable for all datapath,
+	// it's charging level will be PDU-based
+	if dlIPFilterRule.Src == "any" && dlIPFilterRule.Dst == "assigned" {
+		return PduSessionCharging, nil
+	} else {
+		// For the PCC rule that is applicable for all datapath for a datapath,
+		// it's charging level will be flow-based
+		return FlowCharging, nil
+	}
+}
+
 func (r *PCCRule) UpdateDataPathFlowDescription(dlFlowDesc string) error {
 	if r.Datapath == nil {
 		return fmt.Errorf("pcc[%s]: no data path", r.PccRuleId)
@@ -69,26 +93,10 @@ func (r *PCCRule) UpdateDataPathFlowDescription(dlFlowDesc string) error {
 	if dlFlowDesc == "" {
 		return fmt.Errorf("pcc[%s]: no flow description", r.PccRuleId)
 	}
-	ulFlowDesc := getUplinkFlowDescription(dlFlowDesc)
-	if ulFlowDesc == "" {
-		return fmt.Errorf("pcc[%s]: uplink flow description parsing error", r.PccRuleId)
-	}
+
+	ulFlowDesc := dlFlowDesc
 	r.Datapath.UpdateFlowDescription(ulFlowDesc, dlFlowDesc) // UL, DL flow description should be same
 	return nil
-}
-
-func getUplinkFlowDescription(dlFlowDesc string) string {
-	ulIPFilterRule, err := flowdesc.Decode(dlFlowDesc)
-	if err != nil {
-		return "Decode dlFlowDesc fail"
-	}
-
-	ulIPFilterRule.SwapSrcAndDst()
-	ulFlowDesc, err := flowdesc.Encode(ulIPFilterRule)
-	if err != nil {
-		return "Encode ulFlowDesc fail"
-	}
-	return ulFlowDesc
 }
 
 func (r *PCCRule) AddDataPathForwardingParameters(c *SMContext,
@@ -113,8 +121,12 @@ func (r *PCCRule) AddDataPathForwardingParameters(c *SMContext,
 			return
 		}
 	}
-	r.Datapath.AddForwardingParameters(routeProf.ForwardingPolicyID,
-		c.Tunnel.DataPathPool.GetDefaultPath().FirstDPNode.GetUpLinkPDR().PDI.LocalFTeid.Teid)
+	if c.Tunnel.DataPathPool.GetDefaultPath() == nil {
+		logger.CtxLog.Infoln("No Default Data Path")
+	} else {
+		r.Datapath.AddForwardingParameters(routeProf.ForwardingPolicyID,
+			c.Tunnel.DataPathPool.GetDefaultPath().FirstDPNode.GetUpLinkPDR().PDI.LocalFTeid.Teid)
+	}
 }
 
 func (r *PCCRule) BuildNasQoSRule(smCtx *SMContext,
@@ -147,19 +159,19 @@ func createNasPacketFilter(
 ) (*nasType.PacketFilter, error) {
 	pf := new(nasType.PacketFilter)
 
-	pfId, err := smCtx.PacketFilterIDGenerator.Allocate()
-	if err != nil {
-		return nil, err
+	pfId, errAllocate := smCtx.PacketFilterIDGenerator.Allocate()
+	if errAllocate != nil {
+		return nil, errAllocate
 	}
 	pf.Identifier = uint8(pfId)
 	smCtx.PacketFilterIDToNASPFID[pfInfo.PackFiltId] = uint8(pfId)
 
 	switch pfInfo.FlowDirection {
-	case models.FlowDirectionRm_DOWNLINK:
+	case models.FlowDirection_DOWNLINK:
 		pf.Direction = nasType.PacketFilterDirectionDownlink
-	case models.FlowDirectionRm_UPLINK:
+	case models.FlowDirection_UPLINK:
 		pf.Direction = nasType.PacketFilterDirectionUplink
-	case models.FlowDirectionRm_BIDIRECTIONAL:
+	case models.FlowDirection_BIDIRECTIONAL:
 		pf.Direction = nasType.PacketFilterDirectionBidirectional
 	}
 
@@ -195,10 +207,10 @@ func createNasPacketFilter(
 		}
 	}
 
-	if ipFilterRule.Dst != "any" {
-		_, ipNet, err := net.ParseCIDR(ipFilterRule.Dst)
-		if err != nil {
-			return nil, fmt.Errorf("parse IP fail: %s", err)
+	if ipFilterRule.Dst != "assigned" {
+		_, ipNet, errParseCIDR := net.ParseCIDR(ipFilterRule.Dst)
+		if errParseCIDR != nil {
+			return nil, fmt.Errorf("parse IP fail: %s", errParseCIDR)
 		}
 		pfComponents = append(pfComponents, &nasType.PacketFilterIPv4LocalAddress{
 			Address: ipNet.IP.To4(),
@@ -219,9 +231,9 @@ func createNasPacketFilter(
 	}
 
 	if ipFilterRule.Src != "any" {
-		_, ipNet, err := net.ParseCIDR(ipFilterRule.Src)
-		if err != nil {
-			return nil, fmt.Errorf("parse IP fail: %s", err)
+		_, ipNet, errParseCIDR := net.ParseCIDR(ipFilterRule.Src)
+		if errParseCIDR != nil {
+			return nil, fmt.Errorf("parse IP fail: %s", errParseCIDR)
 		}
 		pfComponents = append(pfComponents, &nasType.PacketFilterIPv4RemoteAddress{
 			Address: ipNet.IP.To4(),
@@ -259,10 +271,10 @@ func BuildNASPacketFiltersFromFlowInformation(pfInfo *models.FlowInformation,
 	smCtx *SMContext,
 ) ([]nasType.PacketFilter, error) {
 	var pfList []nasType.PacketFilter
-	var err error
 
 	ipFilterRule := flowdesc.NewIPFilterRule()
 	if pfInfo.FlowDescription != "" {
+		var err error
 		ipFilterRule, err = flowdesc.Decode(pfInfo.FlowDescription)
 		if err != nil {
 			return nil, fmt.Errorf("parse packet filter content fail: %s", err)

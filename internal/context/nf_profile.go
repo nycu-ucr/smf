@@ -4,23 +4,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nycu-ucr/openapi/models"
-	"github.com/nycu-ucr/smf/pkg/factory"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/smf/pkg/factory"
 )
 
-var NFProfile struct {
-	NFServices       *[]models.NfService
+type NFProfile struct {
+	NFServices       *[]models.NrfNfManagementNfService
 	NFServiceVersion *[]models.NfServiceVersion
 	SMFInfo          *models.SmfInfo
 	PLMNList         *[]models.PlmnId
 }
 
-func SetupNFProfile(config *factory.Config) {
+func (c *SMFContext) SetupNFProfile(nfProfileconfig *factory.Config) {
 	// Set time
 	nfSetupTime := time.Now()
 
 	// set NfServiceVersion
-	NFProfile.NFServiceVersion = &[]models.NfServiceVersion{
+	c.NfProfile.NFServiceVersion = &[]models.NfServiceVersion{
 		{
 			ApiVersionInUri: "v1",
 			ApiFullVersion: fmt.
@@ -30,12 +30,12 @@ func SetupNFProfile(config *factory.Config) {
 	}
 
 	// set NFServices
-	NFProfile.NFServices = new([]models.NfService)
-	for _, serviceName := range config.Configuration.ServiceNameList {
-		*NFProfile.NFServices = append(*NFProfile.NFServices, models.NfService{
+	c.NfProfile.NFServices = new([]models.NrfNfManagementNfService)
+	for _, serviceName := range nfProfileconfig.Configuration.ServiceNameList {
+		*c.NfProfile.NFServices = append(*c.NfProfile.NFServices, models.NrfNfManagementNfService{
 			ServiceInstanceId: GetSelf().NfInstanceID + serviceName,
 			ServiceName:       models.ServiceName(serviceName),
-			Versions:          NFProfile.NFServiceVersion,
+			Versions:          *c.NfProfile.NFServiceVersion,
 			Scheme:            models.UriScheme_HTTPS,
 			NfServiceStatus:   models.NfServiceStatus_REGISTERED,
 			ApiPrefix:         fmt.Sprintf("%s://%s:%d", GetSelf().URIScheme, GetSelf().RegisterIPv4, GetSelf().SBIPort),
@@ -43,15 +43,15 @@ func SetupNFProfile(config *factory.Config) {
 	}
 
 	// set smfInfo
-	NFProfile.SMFInfo = &models.SmfInfo{
+	c.NfProfile.SMFInfo = &models.SmfInfo{
 		SNssaiSmfInfoList: SNssaiSmfInfo(),
 	}
 
 	// set PlmnList if exists
-	if plmnList := config.Configuration.PLMNList; plmnList != nil {
-		NFProfile.PLMNList = new([]models.PlmnId)
+	if plmnList := nfProfileconfig.Configuration.PLMNList; plmnList != nil {
+		c.NfProfile.PLMNList = new([]models.PlmnId)
 		for _, plmn := range plmnList {
-			*NFProfile.PLMNList = append(*NFProfile.PLMNList, models.PlmnId{
+			*c.NfProfile.PLMNList = append(*c.NfProfile.PLMNList, models.PlmnId{
 				Mcc: plmn.Mcc,
 				Mnc: plmn.Mnc,
 			})
@@ -59,11 +59,11 @@ func SetupNFProfile(config *factory.Config) {
 	}
 }
 
-func SNssaiSmfInfo() *[]models.SnssaiSmfInfoItem {
+func SNssaiSmfInfo() []models.SnssaiSmfInfoItem {
 	snssaiInfo := make([]models.SnssaiSmfInfoItem, 0)
 	for _, snssai := range smfContext.SnssaiInfos {
 		var snssaiInfoModel models.SnssaiSmfInfoItem
-		snssaiInfoModel.SNssai = &models.Snssai{
+		snssaiInfoModel.SNssai = &models.ExtSnssai{
 			Sst: snssai.Snssai.Sst,
 			Sd:  snssai.Snssai.Sd,
 		}
@@ -75,10 +75,10 @@ func SNssaiSmfInfo() *[]models.SnssaiSmfInfoItem {
 			})
 		}
 
-		snssaiInfoModel.DnnSmfInfoList = &dnnModelList
+		snssaiInfoModel.DnnSmfInfoList = dnnModelList
 
 		snssaiInfo = append(snssaiInfo, snssaiInfoModel)
 	}
 
-	return &snssaiInfo
+	return snssaiInfo
 }

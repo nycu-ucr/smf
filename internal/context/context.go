@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 	"fmt"
+	"math"
 	"net"
 	"os"
 	"sync/atomic"
@@ -10,18 +11,23 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/nycu-ucr/openapi/Nnrf_NFDiscovery"
-	"github.com/nycu-ucr/openapi/Nnrf_NFManagement"
-	"github.com/nycu-ucr/openapi/Nudm_SubscriberDataManagement"
-	"github.com/nycu-ucr/openapi/models"
-	"github.com/nycu-ucr/pfcp/pfcpType"
-	"github.com/nycu-ucr/smf/internal/logger"
-	"github.com/nycu-ucr/smf/pkg/factory"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/oauth"
+	"github.com/free5gc/pfcp/pfcpType"
+	"github.com/free5gc/smf/internal/logger"
+	"github.com/free5gc/smf/pkg/factory"
+	"github.com/free5gc/util/idgenerator"
 )
 
 func Init() {
 	smfContext.NfInstanceID = uuid.New().String()
 }
+
+type NFContext interface {
+	AuthorizationCheck(token string, serviceName models.ServiceName) error
+}
+
+var _ NFContext = &SMFContext{}
 
 var smfContext SMFContext
 
@@ -39,7 +45,8 @@ type SMFContext struct {
 	ExternalAddr string
 	ListenAddr   string
 
-	UDMProfile models.NfProfile
+	UDMProfile models.NrfNfDiscoveryNfProfile
+	NfProfile  NFProfile
 
 	Key    string
 	PEM    string
@@ -47,29 +54,42 @@ type SMFContext struct {
 
 	SnssaiInfos []*SnssaiSmfInfo
 
-	NrfUri                         string
-	NFManagementClient             *Nnrf_NFManagement.APIClient
-	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
-	SubscriberDataManagementClient *Nudm_SubscriberDataManagement.APIClient
-	Locality                       string
-	AssocFailAlertInterval         time.Duration
-	AssocFailRetryInterval         time.Duration
+	NrfUri                 string
+	NrfCertPem             string
+	Locality               string
+	AssocFailAlertInterval time.Duration
+	AssocFailRetryInterval time.Duration
+	OAuth2Required         bool
 
 	UserPlaneInformation  *UserPlaneInformation
-	Ctx                   context.Context
-	PFCPCancelFunc        context.CancelFunc
+	PfcpContext           context.Context
+	PfcpCancelFunc        context.CancelFunc
 	PfcpHeartbeatInterval time.Duration
 
 	// Now only "IPv4" supported
 	// TODO: support "IPv6", "IPv4v6", "Ethernet"
 	SupportedPDUSessionType string
 
-	//*** For ULCL ** //
+	// *** For ULCL *** //
 	ULCLSupport         bool
 	ULCLGroups          map[string][]string
 	UEPreConfigPathPool map[string]*UEPreConfigPaths
 	UEDefaultPathPool   map[string]*UEDefaultPaths
 	LocalSEIDCount      uint64
+
+	// Each pdu session should have a unique charging id
+	ChargingIDGenerator *idgenerator.IDGenerator
+
+	Ues *Ues
+}
+
+func GenerateChargingID() int32 {
+	if smfContext.ChargingIDGenerator != nil {
+		if id, err := smfContext.ChargingIDGenerator.Allocate(); err == nil {
+			return int32(id)
+		}
+	}
+	return 0
 }
 
 func ResolveIP(host string) net.IP {
@@ -89,9 +109,9 @@ func (s *SMFContext) ListenIP() net.IP {
 }
 
 // RetrieveDnnInformation gets the corresponding dnn info from S-NSSAI and DNN
-func RetrieveDnnInformation(Snssai *models.Snssai, dnn string) *SnssaiSmfDnnInfo {
+func RetrieveDnnInformation(snssai *models.Snssai, dnn string) *SnssaiSmfDnnInfo {
 	for _, snssaiInfo := range GetSelf().SnssaiInfos {
-		if snssaiInfo.Snssai.EqualModelsSnssai(Snssai) {
+		if snssaiInfo.Snssai.EqualModelsSnssai(snssai) {
 			return snssaiInfo.DnnInfos[dnn]
 		}
 	}
@@ -152,6 +172,7 @@ func InitSmfContext(config *factory.Config) {
 		logger.CtxLog.Warn("NRF Uri is empty! Using localhost as NRF IPv4 address.")
 		smfContext.NrfUri = fmt.Sprintf("%s://%s:%d", smfContext.URIScheme, "127.0.0.1", 29510)
 	}
+	smfContext.NrfCertPem = configuration.NrfCertPem
 
 	if pfcp := configuration.PFCP; pfcp != nil {
 		smfContext.ListenAddr = pfcp.ListenAddr
@@ -178,14 +199,14 @@ func InitSmfContext(config *factory.Config) {
 		}
 
 		smfContext.PfcpHeartbeatInterval = pfcp.HeartbeatInterval
-
+		var multipleOfInterval time.Duration = 5
 		if pfcp.AssocFailAlertInterval == 0 {
-			smfContext.AssocFailAlertInterval = 5 * time.Minute
+			smfContext.AssocFailAlertInterval = multipleOfInterval * time.Minute
 		} else {
 			smfContext.AssocFailAlertInterval = pfcp.AssocFailAlertInterval
 		}
 		if pfcp.AssocFailRetryInterval == 0 {
-			smfContext.AssocFailRetryInterval = 5 * time.Second
+			smfContext.AssocFailRetryInterval = multipleOfInterval * time.Second
 		} else {
 			smfContext.AssocFailRetryInterval = pfcp.AssocFailRetryInterval
 		}
@@ -216,24 +237,21 @@ func InitSmfContext(config *factory.Config) {
 		smfContext.SnssaiInfos = append(smfContext.SnssaiInfos, &snssaiInfo)
 	}
 
-	// Set client and set url
-	ManagementConfig := Nnrf_NFManagement.NewConfiguration()
-	ManagementConfig.SetBasePath(GetSelf().NrfUri)
-	smfContext.NFManagementClient = Nnrf_NFManagement.NewAPIClient(ManagementConfig)
-
-	NFDiscovryConfig := Nnrf_NFDiscovery.NewConfiguration()
-	NFDiscovryConfig.SetBasePath(GetSelf().NrfUri)
-	smfContext.NFDiscoveryClient = Nnrf_NFDiscovery.NewAPIClient(NFDiscovryConfig)
-
 	smfContext.ULCLSupport = configuration.ULCL
 
 	smfContext.SupportedPDUSessionType = "IPv4"
 
 	smfContext.UserPlaneInformation = NewUserPlaneInformation(&configuration.UserPlaneInformation)
 
-	SetupNFProfile(config)
+	smfContext.ChargingIDGenerator = idgenerator.NewGenerator(1, math.MaxUint32)
+
+	smfContext.SetupNFProfile(config)
 
 	smfContext.Locality = configuration.Locality
+
+	TeidGenerator = idgenerator.NewGenerator(1, math.MaxUint32)
+
+	smfContext.Ues = InitSmfUeData()
 }
 
 func InitSMFUERouting(routingConfig *factory.RoutingConfig) {
@@ -282,4 +300,21 @@ func GetUserPlaneInformation() *UserPlaneInformation {
 
 func GetUEDefaultPathPool(groupName string) *UEDefaultPaths {
 	return smfContext.UEDefaultPathPool[groupName]
+}
+
+func (c *SMFContext) GetTokenCtx(serviceName models.ServiceName, targetNF models.NrfNfManagementNfType) (
+	context.Context, *models.ProblemDetails, error,
+) {
+	if !c.OAuth2Required {
+		return context.TODO(), nil, nil
+	}
+	return oauth.GetTokenCtx(models.NrfNfManagementNfType_SMF, targetNF,
+		c.NfInstanceID, c.NrfUri, string(serviceName))
+}
+
+func (c *SMFContext) AuthorizationCheck(token string, serviceName models.ServiceName) error {
+	if !c.OAuth2Required {
+		return nil
+	}
+	return oauth.VerifyOAuth(token, string(serviceName), c.NrfCertPem)
 }

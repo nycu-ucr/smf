@@ -4,12 +4,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math"
 	"net"
 
-	"github.com/nycu-ucr/smf/internal/context/pool"
-	"github.com/nycu-ucr/smf/internal/logger"
-	"github.com/nycu-ucr/smf/pkg/factory"
+	"github.com/free5gc/smf/internal/context/pool"
+	"github.com/free5gc/smf/internal/logger"
+	"github.com/free5gc/smf/pkg/factory"
 )
 
 // UeIPPool represent IPv4 address pool for UE
@@ -44,7 +43,7 @@ func NewUEIPPool(factoryPool *factory.UEIPPool) *UeIPPool {
 	return ueIPPool
 }
 
-func (ueIPPool *UeIPPool) allocate(request net.IP) net.IP {
+func (ueIPPool *UeIPPool) Allocate(request net.IP) net.IP {
 	var allocVal int
 	var ok bool
 	if request != nil {
@@ -70,16 +69,17 @@ RETURNIP:
 	return retIP
 }
 
-func (ueIPPool *UeIPPool) exclude(excludePool *UeIPPool) error {
+func (ueIPPool *UeIPPool) Exclude(excludePool *UeIPPool) error {
 	excludeMin := excludePool.pool.Min()
-	excludeMax := excludePool.pool.Max() + 1
-	if !ueIPPool.ueSubNet.IP.Equal(excludePool.ueSubNet.IP) {
-		excludeMin -= 1
-	}
+	excludeMax := excludePool.pool.Max()
 	if err := ueIPPool.pool.Reserve(excludeMin, excludeMax); err != nil {
 		return fmt.Errorf("exclude uePool fail: %v", err)
 	}
 	return nil
+}
+
+func (u *UeIPPool) Pool() *pool.LazyReusePool {
+	return u.pool
 }
 
 func uint32ToIP(intval uint32) net.IP {
@@ -88,7 +88,7 @@ func uint32ToIP(intval uint32) net.IP {
 	return buf
 }
 
-func (ueIPPool *UeIPPool) release(addr net.IP) {
+func (ueIPPool *UeIPPool) Release(addr net.IP) {
 	addrVal := binary.BigEndian.Uint32(addr)
 	res := ueIPPool.pool.Free(int(addrVal))
 	if !res {
@@ -136,11 +136,9 @@ func isOverlap(pools []*UeIPPool) bool {
 func calcAddrRange(ipNet *net.IPNet) (minAddr, maxAddr uint32, err error) {
 	maskVal := binary.BigEndian.Uint32(ipNet.Mask)
 	baseIPVal := binary.BigEndian.Uint32(ipNet.IP)
-	if maskVal == math.MaxUint32 {
-		return baseIPVal, baseIPVal, nil
-	}
-	minAddr = (baseIPVal & maskVal) + 1  // 0 is network address
-	maxAddr = (baseIPVal | ^maskVal) - 1 // all 1 is broadcast address
+	// move removing network and broadcast address later
+	minAddr = (baseIPVal & maskVal)
+	maxAddr = (baseIPVal | ^maskVal)
 	if minAddr > maxAddr {
 		return minAddr, maxAddr, errors.New("Mask is invalid.")
 	}

@@ -1,32 +1,25 @@
 package context
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"net"
-	"github.com/nycu-ucr/gonet/http"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/antihax/optional"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"github.com/nycu-ucr/nas/nasConvert"
-	"github.com/nycu-ucr/nas/nasMessage"
+	"github.com/free5gc/nas/nasConvert"
+	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap/ngapType"
-	"github.com/nycu-ucr/openapi"
-	"github.com/nycu-ucr/openapi/Namf_Communication"
-	"github.com/nycu-ucr/openapi/Nnrf_NFDiscovery"
-	"github.com/nycu-ucr/openapi/Npcf_SMPolicyControl"
-	"github.com/nycu-ucr/openapi/models"
-	"github.com/nycu-ucr/pfcp/pfcpType"
-	"github.com/nycu-ucr/smf/internal/logger"
-	"github.com/nycu-ucr/smf/pkg/factory"
-	"github.com/nycu-ucr/util/idgenerator"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/pfcp/pfcpType"
+	"github.com/free5gc/smf/internal/logger"
+	"github.com/free5gc/smf/pkg/factory"
+	"github.com/free5gc/util/idgenerator"
 )
 
 var (
@@ -45,18 +38,19 @@ const (
 
 type UrrType int
 
+// Reserved URR report for ID = 0 ~ 6
 const (
-	N3N6_MBEQ_URR UrrType = iota
-	N3N6_MAEQ_URR
-	N3N9_MBEQ_URR
-	N3N9_MAEQ_URR
-	N9N6_MBEQ_URR
-	N9N6_MAEQ_URR
+	N3N6_MBQE_URR UrrType = iota
+	N3N6_MAQE_URR
+	N3N9_MBQE_URR
+	N3N9_MAQE_URR
+	N9N6_MBQE_URR
+	N9N6_MAQE_URR
 	NOT_FOUND_URR
 )
 
 func (t UrrType) String() string {
-	urrTypeList := []string{"N3N6_MBEQ", "N3N6_MAEQ", "N3N9_MBEQ", "N3N9_MAEQ", "N9N6_MBEQ", "N9N6_MAEQ"}
+	urrTypeList := []string{"N3N6_MBQE", "N3N6_MAQE", "N3N9_MBQE", "N3N9_MAQE", "N9N6_MBQE", "N9N6_MAQE"}
 	return urrTypeList[t]
 }
 
@@ -100,6 +94,7 @@ type EventExposureNotification struct {
 
 type UsageReport struct {
 	UrrId uint32
+	UpfId string
 
 	TotalVolume    uint64
 	UplinkVolume   uint64
@@ -109,11 +104,13 @@ type UsageReport struct {
 	UplinkPktNum   uint64
 	DownlinkPktNum uint64
 
-	ReportTpye models.TriggerType
+	ReportTpye models.ChfConvergedChargingTriggerType
 }
 
+var TeidGenerator *idgenerator.IDGenerator
+
 type SMContext struct {
-	*models.SmContextCreateData
+	*models.SmfPduSessionSmContextCreateData
 
 	Ref string
 
@@ -125,6 +122,9 @@ type SMContext struct {
 	Pei          string
 	Identifier   string
 	PDUSessionID int32
+
+	LocalULTeid uint32
+	LocalDLTeid uint32
 
 	UpCnxState models.UpCnxState
 
@@ -152,11 +152,11 @@ type SMContext struct {
 	UpSecurityFromPathSwitchRequestSameAsLocalStored bool
 
 	// Client
-	SMPolicyClient      *Npcf_SMPolicyControl.APIClient
-	CommunicationClient *Namf_Communication.APIClient
+	CommunicationClientApiPrefix string
 
-	AMFProfile         models.NfProfile
-	SelectedPCFProfile models.NfProfile
+	AMFProfile         models.NrfNfDiscoveryNfProfile
+	SelectedPCFProfile models.NrfNfDiscoveryNfProfile
+	SelectedCHFProfile models.NrfNfDiscoveryNfProfile
 	SmStatusNotifyUri  string
 
 	Tunnel      *UPTunnel
@@ -172,6 +172,7 @@ type SMContext struct {
 	PCCRules            map[string]*PCCRule
 	SessionRules        map[string]*SessionRule
 	TrafficControlDatas map[string]*TrafficControlData
+	ChargingData        map[string]*models.ChargingData
 	QosDatas            map[string]*models.QosData
 
 	UpPathChgEarlyNotification map[string]*EventExposureNotification // Key: Uri+NotifId
@@ -181,6 +182,7 @@ type SMContext struct {
 	SelectedSessionRuleID string
 
 	// QoS
+	defRuleID               uint8
 	QoSRuleIDGenerator      *idgenerator.IDGenerator
 	PacketFilterIDGenerator *idgenerator.IDGenerator
 	QFIGenerator            *idgenerator.IDGenerator
@@ -197,8 +199,21 @@ type SMContext struct {
 	UrrUpfMap          map[string]*URR
 	UrrReportTime      time.Duration
 	UrrReportThreshold uint64
-	UrrReports         []UsageReport
+	// Cache the usage reports, sent from UPF
+	// Those information will be included in CDR.
+	UrrReports []UsageReport
 
+	// Charging Related
+	ChargingDataRef string
+	// Each PDU session has a unique charging id
+	ChargingID    int32
+	RequestedUnit int32
+	// key = urrid
+	// All urr can map to a rating group
+	// However, a rating group may map to more than one urr
+	// e.g. In UL CL case, the rating group for recoreding PDU Session volume may map to two URR
+	//		one is for PSA 1, the other is for PSA 2.
+	ChargingInfo map[uint32]*ChargingInfo
 	// NAS
 	Pti                     uint8
 	EstAcceptCause5gSMValue uint8
@@ -208,6 +223,8 @@ type SMContext struct {
 
 	// State
 	state SMContextState
+
+	UeCmRegistered bool
 
 	// Loggers
 	Log *logrus.Entry
@@ -220,6 +237,21 @@ type SMContext struct {
 
 	// lock
 	SMLock sync.Mutex
+}
+
+func GenerateTEID() (uint32, error) {
+	var id uint32
+	if tmpID, err := TeidGenerator.Allocate(); err != nil {
+		return 0, err
+	} else {
+		id = uint32(tmpID)
+	}
+
+	return id, nil
+}
+
+func ReleaseTEID(teid uint32) {
+	TeidGenerator.FreeID(int64(teid))
 }
 
 func canonicalName(id string, pduSessID int32) string {
@@ -268,6 +300,12 @@ func NewSMContext(id string, pduSessID int32) *SMContext {
 	smContext.Tunnel = NewUPTunnel()
 
 	smContext.QoSRuleIDGenerator = idgenerator.NewGenerator(1, 255)
+	if defRuleID, err := smContext.QoSRuleIDGenerator.Allocate(); err != nil {
+		logger.CtxLog.Warnln("Create Default QoS rule error ", err)
+	} else {
+		smContext.defRuleID = uint8(defRuleID)
+	}
+
 	smContext.PacketFilterIDGenerator = idgenerator.NewGenerator(1, 255)
 	smContext.QFIGenerator = idgenerator.NewGenerator(2, 63) // 1 always reserve for default Qos
 	smContext.PCCRuleIDToQoSRuleID = make(map[string]uint8)
@@ -281,11 +319,31 @@ func NewSMContext(id string, pduSessID int32) *SMContext {
 	smContext.GenerateUrrId()
 	smContext.UrrUpfMap = make(map[string]*URR)
 
-	if factory.SmfConfig.Configuration != nil {
+	smContext.ChargingInfo = make(map[uint32]*ChargingInfo)
+	smContext.ChargingID = GenerateChargingID()
+
+	if factory.SmfConfig != nil &&
+		factory.SmfConfig.Configuration != nil {
 		smContext.UrrReportTime = time.Duration(factory.SmfConfig.Configuration.UrrPeriod) * time.Second
 		smContext.UrrReportThreshold = factory.SmfConfig.Configuration.UrrThreshold
 		logger.CtxLog.Infof("UrrPeriod: %v", smContext.UrrReportTime)
 		logger.CtxLog.Infof("UrrThreshold: %d", smContext.UrrReportThreshold)
+		if factory.SmfConfig.Configuration.RequestedUnit != 0 {
+			smContext.RequestedUnit = factory.SmfConfig.Configuration.RequestedUnit
+		} else {
+			smContext.RequestedUnit = 1000
+		}
+	}
+
+	var err error
+	smContext.LocalDLTeid, err = GenerateTEID()
+	if err != nil {
+		return nil
+	}
+
+	smContext.LocalULTeid, err = GenerateTEID()
+	if err != nil {
+		return nil
 	}
 
 	return smContext
@@ -333,14 +391,17 @@ func RemoveSMContext(ref string) {
 		seidSMContextMap.Delete(pfcpSessionContext.LocalSEID)
 	}
 
+	ReleaseTEID(smContext.LocalULTeid)
+	ReleaseTEID(smContext.LocalDLTeid)
+
 	smContextPool.Delete(ref)
 	canonicalRef.Delete(canonicalName(smContext.Supi, smContext.PDUSessionID))
 	smContext.Log.Infof("smContext[%s] is deleted from pool", ref)
 }
 
 // *** add unit test ***//
-func GetSMContextBySEID(SEID uint64) *SMContext {
-	if value, ok := seidSMContextMap.Load(SEID); ok {
+func GetSMContextBySEID(seid uint64) *SMContext {
+	if value, ok := seidSMContextMap.Load(seid); ok {
 		smContext := value.(*SMContext)
 		return smContext
 	}
@@ -349,27 +410,27 @@ func GetSMContextBySEID(SEID uint64) *SMContext {
 
 func (smContext *SMContext) GenerateUrrId() {
 	if id, err := smContext.UrrIDGenerator.Allocate(); err == nil {
-		smContext.UrrIdMap[N3N6_MBEQ_URR] = uint32(id)
+		smContext.UrrIdMap[N3N6_MBQE_URR] = uint32(id)
 	}
 	if id, err := smContext.UrrIDGenerator.Allocate(); err == nil {
-		smContext.UrrIdMap[N3N6_MAEQ_URR] = uint32(id)
+		smContext.UrrIdMap[N3N6_MAQE_URR] = uint32(id)
 	}
 	if id, err := smContext.UrrIDGenerator.Allocate(); err == nil {
-		smContext.UrrIdMap[N9N6_MBEQ_URR] = uint32(id)
+		smContext.UrrIdMap[N9N6_MBQE_URR] = uint32(id)
 	}
 	if id, err := smContext.UrrIDGenerator.Allocate(); err == nil {
-		smContext.UrrIdMap[N9N6_MAEQ_URR] = uint32(id)
+		smContext.UrrIdMap[N9N6_MAQE_URR] = uint32(id)
 	}
 	if id, err := smContext.UrrIDGenerator.Allocate(); err == nil {
-		smContext.UrrIdMap[N3N9_MBEQ_URR] = uint32(id)
+		smContext.UrrIdMap[N3N9_MBQE_URR] = uint32(id)
 	}
 	if id, err := smContext.UrrIDGenerator.Allocate(); err == nil {
-		smContext.UrrIdMap[N3N9_MAEQ_URR] = uint32(id)
+		smContext.UrrIdMap[N3N9_MAQE_URR] = uint32(id)
 	}
 }
 
-func (smContext *SMContext) BuildCreatedData() *models.SmContextCreatedData {
-	return &models.SmContextCreatedData{
+func (smContext *SMContext) BuildCreatedData() *models.SmfPduSessionSmContextCreatedData {
+	return &models.SmfPduSessionSmContextCreatedData{
 		SNssai: smContext.SNssai,
 	}
 }
@@ -400,60 +461,14 @@ func (smContext *SMContext) PDUAddressToNAS() ([12]byte, uint8) {
 	copy(addr[:], smContext.PDUAddress)
 	switch smContext.SelectedPDUSessionType {
 	case nasMessage.PDUSessionTypeIPv4:
-		addrLen = 4 + 1
+		var addrLenBuf uint8 = 4 + 1
+		addrLen = addrLenBuf
 	case nasMessage.PDUSessionTypeIPv6:
 	case nasMessage.PDUSessionTypeIPv4IPv6:
-		addrLen = 12 + 1
+		var addrLenBuf uint8 = 12 + 1
+		addrLen = addrLenBuf
 	}
 	return addr, addrLen
-}
-
-// PCFSelection will select PCF for this SM Context
-func (smContext *SMContext) PCFSelection() error {
-	// Send NFDiscovery for find PCF
-	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{}
-
-	if GetSelf().Locality != "" {
-		localVarOptionals.PreferredLocality = optional.NewString(GetSelf().Locality)
-	}
-
-	rep, res, err := GetSelf().
-		NFDiscoveryClient.
-		NFInstancesStoreApi.
-		SearchNFInstances(context.TODO(), models.NfType_PCF, models.NfType_SMF, &localVarOptionals)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
-			logger.PduSessLog.Errorf("SmfEventExposureNotification response body cannot close: %+v", rspCloseErr)
-		}
-	}()
-
-	if res != nil {
-		if status := res.StatusCode; status != http.StatusOK {
-			apiError := err.(openapi.GenericOpenAPIError)
-			problemDetails := apiError.Model().(models.ProblemDetails)
-
-			logger.CtxLog.Warningf("NFDiscovery PCF return status: %d\n", status)
-			logger.CtxLog.Warningf("Detail: %v\n", problemDetails.Title)
-		}
-	}
-
-	// Select PCF from available PCF
-
-	smContext.SelectedPCFProfile = rep.NfInstances[0]
-
-	// Create SMPolicyControl Client for this SM Context
-	for _, service := range *smContext.SelectedPCFProfile.NfServices {
-		if service.ServiceName == models.ServiceName_NPCF_SMPOLICYCONTROL {
-			SmPolicyControlConf := Npcf_SMPolicyControl.NewConfiguration()
-			SmPolicyControlConf.SetBasePath(service.ApiPrefix)
-			smContext.SMPolicyClient = Npcf_SMPolicyControl.NewAPIClient(SmPolicyControlConf)
-		}
-	}
-
-	return nil
 }
 
 func (smContext *SMContext) GetNodeIDByLocalSEID(seid uint64) pfcpType.NodeID {
@@ -504,6 +519,7 @@ func (smContext *SMContext) AllocateLocalSEIDForDataPath(dataPath *DataPath) {
 func (smContext *SMContext) PutPDRtoPFCPSession(nodeID pfcpType.NodeID, pdr *PDR) error {
 	NodeIDtoIP := nodeID.ResolveNodeIdToIp().String()
 	if pfcpSessCtx, exist := smContext.PFCPContext[NodeIDtoIP]; exist {
+		smContext.Log.Tracef("PutPDRtoPFCPSession [%+v]", pdr)
 		pfcpSessCtx.PDRs[pdr.PDRID] = pdr
 	} else {
 		return fmt.Errorf("Can't find PFCPContext[%s] to put PDR(%d)", NodeIDtoIP, pdr.PDRID)
@@ -560,22 +576,46 @@ func (c *SMContext) AllocUeIP() error {
 	return nil
 }
 
+// This function create ULCL data paths.
+func (c *SMContext) SelectULCLDataPaths() error {
+	if c.SelectionParam == nil || c.SelectedUPF == nil {
+		return fmt.Errorf("SelectULCLDataPath err: SelectionParam or SelectedUPF is nil")
+	}
+
+	if GetSelf().ULCLSupport && CheckUEHasPreConfig(c.Supi) {
+		c.Log.Infof("Has pre-config ULCL paths")
+		uePreConfigPaths := GetUEPreConfigPaths(c.Supi, c.SelectedUPF.Name)
+		for _, dp := range uePreConfigPaths.DataPathPool {
+			if !dp.IsDefaultPath {
+				c.Tunnel.AddDataPath(dp)
+			}
+		}
+	}
+	return nil
+}
+
+// This function create a data path to be default data path.
 func (c *SMContext) SelectDefaultDataPath() error {
 	if c.SelectionParam == nil || c.SelectedUPF == nil {
 		return fmt.Errorf("SelectDefaultDataPath err: SelectionParam or SelectedUPF is nil")
 	}
 
-	var defaultPath *DataPath
-	if GetSelf().ULCLSupport && CheckUEHasPreConfig(c.Supi) {
-		c.Log.Infof("Has pre-config route")
-		uePreConfigPaths := GetUEPreConfigPaths(c.Supi, c.SelectedUPF.Name)
-		c.Tunnel.DataPathPool = uePreConfigPaths.DataPathPool
-		c.Tunnel.PathIDGenerator = uePreConfigPaths.PathIDGenerator
+	defaultPath := c.Tunnel.DataPathPool.GetDefaultPath()
+	if defaultPath != nil {
+		// A default path already exists.
+		// Use this one.
+		c.Log.Infof("Has default path")
 		defaultPath = c.Tunnel.DataPathPool.GetDefaultPath()
+	} else if GetSelf().ULCLSupport && CheckUEHasPreConfig(c.Supi) {
+		// Fallback on pre-config default path
+		c.Log.Infof("Has pre-config default path")
+		uePreConfigPaths := GetUEPreConfigPaths(c.Supi, c.SelectedUPF.Name)
+		defaultPath = uePreConfigPaths.DataPathPool.GetDefaultPath()
+		c.Tunnel.AddDataPath(defaultPath)
 	} else {
-		// UE has no pre-config path.
+		// UE has no pre-config path and default path
 		// Use default route
-		c.Log.Infof("Has no pre-config route")
+		c.Log.Infof("Has no pre-config route. Has no default path")
 		defaultUPPath := GetUserPlaneInformation().GetDefaultUserPlanePathByDNNAndUPF(
 			c.SelectionParam, c.SelectedUPF)
 		defaultPath = GenerateDataPath(defaultUPPath)
@@ -586,19 +626,24 @@ func (c *SMContext) SelectDefaultDataPath() error {
 	}
 
 	if defaultPath == nil {
-		return fmt.Errorf("Data Path not found, Selection Parameter: %s",
+		return fmt.Errorf("data path not found, Selection Parameter: %s",
 			c.SelectionParam.String())
 	}
-	defaultPath.ActivateTunnelAndPDR(c, DefaultPrecedence)
+
+	if !defaultPath.Activated {
+		defaultPath.ActivateTunnelAndPDR(c, DefaultPrecedence)
+	}
+
 	return nil
 }
 
 func (c *SMContext) CreatePccRuleDataPath(pccRule *PCCRule,
 	tcData *TrafficControlData, qosData *models.QosData,
+	chgData *models.ChargingData,
 ) error {
 	var targetRoute models.RouteToLocation
 	if tcData != nil && len(tcData.RouteToLocs) > 0 {
-		targetRoute = tcData.RouteToLocs[0]
+		targetRoute = *tcData.RouteToLocs[0]
 	}
 	param := &UPFSelectionParams{
 		Dnn: c.Dnn,
@@ -613,13 +658,30 @@ func (c *SMContext) CreatePccRuleDataPath(pccRule *PCCRule,
 	if createdDataPath == nil {
 		return fmt.Errorf("fail to create data path for pcc rule[%s]", pccRule.PccRuleId)
 	}
+	c.Log.Tracef("CreatePccRuleDataPath: pcc rule: %+v", pccRule)
+
+	// Try to use a default pcc rule as default data path
+	if c.Tunnel.DataPathPool.GetDefaultPath() == nil &&
+		pccRule.Precedence == 255 {
+		createdDataPath.IsDefaultPath = true
+	}
+
 	createdDataPath.GBRFlow = isGBRFlow(qosData)
 	createdDataPath.ActivateTunnelAndPDR(c, uint32(pccRule.Precedence))
 	c.Tunnel.AddDataPath(createdDataPath)
 	pccRule.Datapath = createdDataPath
 	pccRule.AddDataPathForwardingParameters(c, &targetRoute)
-	pccRule.Datapath.AddQoS(c, pccRule.QFI, qosData)
-	c.AddQosFlow(pccRule.QFI, qosData)
+
+	if chgLevel, err := pccRule.IdentifyChargingLevel(); err != nil {
+		c.Log.Warnf("fail to identify charging level[%+v] for pcc rule[%s]", err, pccRule.PccRuleId)
+	} else {
+		pccRule.Datapath.AddChargingRules(c, chgLevel, chgData)
+	}
+
+	if pccRule.RefQosDataID() != "" {
+		pccRule.Datapath.AddQoS(c, pccRule.QFI, qosData)
+		c.AddQosFlow(pccRule.QFI, qosData)
+	}
 	return nil
 }
 
@@ -635,7 +697,7 @@ func (c *SMContext) BuildUpPathChgEventExposureNotification(
 		return
 	}
 
-	en := models.EventNotification{
+	en := models.SmfEventExposureEventNotification{
 		Event:            models.SmfEvent_UP_PATH_CH,
 		SourceTraRouting: srcRoute,
 		TargetTraRouting: tgtRoute,
@@ -654,7 +716,7 @@ func (c *SMContext) BuildUpPathChgEventExposureNotification(
 			v.EventNotifs = append(v.EventNotifs, en)
 		} else {
 			c.UpPathChgEarlyNotification[k] = newEventExposureNotification(
-				chgEvent.NotificationUri, chgEvent.NotifCorreId, en)
+				chgEvent.NotificationUri, chgEvent.NotifCorreId, &en)
 		}
 	}
 	if strings.Contains(string(chgEvent.DnaiChgType), "LATE") {
@@ -664,19 +726,19 @@ func (c *SMContext) BuildUpPathChgEventExposureNotification(
 			v.EventNotifs = append(v.EventNotifs, en)
 		} else {
 			c.UpPathChgLateNotification[k] = newEventExposureNotification(
-				chgEvent.NotificationUri, chgEvent.NotifCorreId, en)
+				chgEvent.NotificationUri, chgEvent.NotifCorreId, &en)
 		}
 	}
 }
 
 func newEventExposureNotification(
 	uri, id string,
-	en models.EventNotification,
+	en *models.SmfEventExposureEventNotification,
 ) *EventExposureNotification {
 	return &EventExposureNotification{
 		NsmfEventExposureNotification: &models.NsmfEventExposureNotification{
 			NotifId:     id,
-			EventNotifs: []models.EventNotification{en},
+			EventNotifs: []models.SmfEventExposureEventNotification{*en},
 		},
 		Uri: uri,
 	}
@@ -803,15 +865,6 @@ func (smContext *SMContext) IsAllowedPDUSessionType(requestedPDUSessionType uint
 		return fmt.Errorf("Requested PDU Sesstion type[%d] is not supported", requestedPDUSessionType)
 	}
 	return nil
-}
-
-func (smContext *SMContext) GetUrrTypeById(urrId uint32) (UrrType, error) {
-	for urrType, id := range smContext.UrrIdMap {
-		if id == urrId {
-			return urrType, nil
-		}
-	}
-	return NOT_FOUND_URR, fmt.Errorf("Urr type not found ")
 }
 
 func (smContext *SMContext) StopT3591() {

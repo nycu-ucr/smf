@@ -1,19 +1,23 @@
 package main
 
 import (
+	"context"
 	"math/rand"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime/debug"
+	"syscall"
 	"time"
 
 	"github.com/urfave/cli"
 
-	"github.com/nycu-ucr/smf/internal/logger"
-	"github.com/nycu-ucr/smf/pkg/factory"
-	"github.com/nycu-ucr/smf/pkg/service"
-	logger_util "github.com/nycu-ucr/util/logger"
-	"github.com/nycu-ucr/util/version"
+	"github.com/free5gc/smf/internal/logger"
+	"github.com/free5gc/smf/pkg/factory"
+	"github.com/free5gc/smf/pkg/service"
+	"github.com/free5gc/smf/pkg/utils"
+	logger_util "github.com/free5gc/util/logger"
+	"github.com/free5gc/util/version"
 )
 
 var SMF *service.SmfApp
@@ -44,7 +48,7 @@ func main() {
 			Usage: "Output NF log to `FILE`",
 		},
 	}
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if err := app.Run(os.Args); err != nil {
 		logger.MainLog.Errorf("SMF Run error: %v\n", err)
@@ -59,25 +63,38 @@ func action(cliCtx *cli.Context) error {
 
 	logger.MainLog.Infoln("SMF version: ", version.GetVersion())
 
+	ctx, cancel := context.WithCancel(context.Background())
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-sigCh  // Wait for interrupt signal to gracefully shutdown
+		cancel() // Notify each goroutine and wait them stopped
+	}()
+
 	cfg, err := factory.ReadConfig(cliCtx.String("config"))
 	if err != nil {
+		sigCh <- nil
 		return err
 	}
 	factory.SmfConfig = cfg
 
 	ueRoutingCfg, err := factory.ReadUERoutingConfig(cliCtx.String("uerouting"))
 	if err != nil {
+		sigCh <- nil
 		return err
 	}
 	factory.UERoutingConfig = ueRoutingCfg
 
-	smf, err := service.NewApp(cfg)
+	pfcpStart, pfcpTerminate := utils.InitPFCPFunc(ctx)
+	smf, err := service.NewApp(ctx, cfg, tlsKeyLogPath, pfcpStart, pfcpTerminate)
 	if err != nil {
+		sigCh <- nil
 		return err
 	}
 	SMF = smf
 
-	smf.Start(tlsKeyLogPath)
+	smf.Start()
 
 	return nil
 }

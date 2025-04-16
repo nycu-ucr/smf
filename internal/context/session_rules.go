@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/nycu-ucr/openapi/models"
+	"github.com/free5gc/openapi/models"
 )
 
 // SessionRule - A session rule consists of policy information elements
