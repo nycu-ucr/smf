@@ -1,15 +1,15 @@
 package consumer
 
 import (
-	"github.com/free5gc/openapi/amf/Communication"
-	"github.com/free5gc/openapi/chf/ConvergedCharging"
-	"github.com/free5gc/openapi/nrf/NFDiscovery"
-	"github.com/free5gc/openapi/nrf/NFManagement"
-	"github.com/free5gc/openapi/pcf/SMPolicyControl"
-	"github.com/free5gc/openapi/smf/PDUSession"
-	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
-	"github.com/free5gc/openapi/udm/UEContextManagement"
-	"github.com/free5gc/smf/pkg/app"
+	"github.com/nycu-ucr/openapi/amf/Communication"
+	"github.com/nycu-ucr/openapi/chf/ConvergedCharging"
+	"github.com/nycu-ucr/openapi/nrf/NFDiscovery"
+	"github.com/nycu-ucr/openapi/nrf/NFManagement"
+	"github.com/nycu-ucr/openapi/pcf/SMPolicyControl"
+	"github.com/nycu-ucr/openapi/smf/PDUSession"
+	"github.com/nycu-ucr/openapi/udm/SubscriberDataManagement"
+	"github.com/nycu-ucr/openapi/udm/UEContextManagement"
+	"github.com/nycu-ucr/smf/pkg/app"
 )
 
 type Consumer struct {

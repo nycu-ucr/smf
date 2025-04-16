@@ -10,12 +10,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/free5gc/nas/nasConvert"
-	"github.com/free5gc/nas/nasType"
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/openapi/pcf/SMPolicyControl"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/util/flowdesc"
+	"github.com/nycu-ucr/nas/nasConvert"
+	"github.com/nycu-ucr/nas/nasType"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/openapi/pcf/SMPolicyControl"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/util/flowdesc"
 )
 
 type npcfService struct {

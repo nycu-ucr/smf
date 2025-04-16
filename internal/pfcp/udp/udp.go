@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/free5gc/pfcp"
-	"github.com/free5gc/pfcp/pfcpUdp"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
 )
 
 const MaxPfcpUdpDataSize = 1024

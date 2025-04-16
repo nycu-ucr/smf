@@ -7,12 +7,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/free5gc/pfcp"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/pfcp/pfcpUdp"
-	"github.com/free5gc/smf/internal/context"
-	smf_pfcp "github.com/free5gc/smf/internal/pfcp"
-	"github.com/free5gc/smf/internal/pfcp/udp"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/pfcp/pfcpUdp"
+	"github.com/nycu-ucr/smf/internal/context"
+	smf_pfcp "github.com/nycu-ucr/smf/internal/pfcp"
+	"github.com/nycu-ucr/smf/internal/pfcp/udp"
 )
 
 const testPfcpClientPort = 12345

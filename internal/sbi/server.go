@@ -3,23 +3,24 @@ package sbi
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"runtime/debug"
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/nycu-ucr/gonet/http"
 
-	"github.com/free5gc/openapi/models"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/smf/internal/sbi/consumer"
-	"github.com/free5gc/smf/internal/sbi/processor"
-	util_oauth "github.com/free5gc/smf/internal/util/oauth"
-	"github.com/free5gc/smf/pkg/app"
-	"github.com/free5gc/smf/pkg/factory"
-	"github.com/free5gc/util/httpwrapper"
-	logger_util "github.com/free5gc/util/logger"
+	"github.com/nycu-ucr/gin"
+
+	"github.com/nycu-ucr/openapi/models"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/sbi/consumer"
+	"github.com/nycu-ucr/smf/internal/sbi/processor"
+	util_oauth "github.com/nycu-ucr/smf/internal/util/oauth"
+	"github.com/nycu-ucr/smf/pkg/app"
+	"github.com/nycu-ucr/smf/pkg/factory"
+	"github.com/nycu-ucr/util/httpwrapper"
+	logger_util "github.com/nycu-ucr/util/logger"
 )
 
 const (

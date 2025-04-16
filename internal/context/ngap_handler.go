@@ -7,9 +7,9 @@ import (
 
 	"github.com/free5gc/aper"
 	"github.com/free5gc/ngap/ngapType"
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/smf/internal/logger"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/smf/internal/logger"
 )
 
 func strNgapCause(cause *ngapType.Cause) string {

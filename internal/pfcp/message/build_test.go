@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/pfcp/message"
-	"github.com/free5gc/smf/internal/pfcp/udp"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/pfcp/message"
+	"github.com/nycu-ucr/smf/internal/pfcp/udp"
+	"github.com/nycu-ucr/smf/pkg/factory"
 )
 
 var testConfig = factory.Config{

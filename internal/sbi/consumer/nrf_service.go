@@ -9,13 +9,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/openapi/nrf/NFDiscovery"
-	"github.com/free5gc/openapi/nrf/NFManagement"
-	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
+	"github.com/nycu-ucr/openapi"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/openapi/nrf/NFDiscovery"
+	"github.com/nycu-ucr/openapi/nrf/NFManagement"
+	"github.com/nycu-ucr/openapi/udm/SubscriberDataManagement"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
 )
 
 type nnrfService struct {

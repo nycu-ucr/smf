@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/pkg/factory"
 )
 
 var config = configuration

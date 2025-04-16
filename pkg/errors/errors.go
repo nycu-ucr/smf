@@ -1,9 +1,9 @@
 package errors
 
 import (
-	"net/http"
+	"github.com/nycu-ucr/gonet/http"
 
-	"github.com/free5gc/openapi/models"
+	"github.com/nycu-ucr/openapi/models"
 )
 
 var (

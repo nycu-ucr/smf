@@ -4,10 +4,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/free5gc/pfcp"
-	"github.com/free5gc/pfcp/pfcpType"
-	"github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/pfcp/udp"
+	"github.com/nycu-ucr/pfcp"
+	"github.com/nycu-ucr/pfcp/pfcpType"
+	"github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/pfcp/udp"
 )
 
 func BuildPfcpAssociationSetupRequest() (pfcp.PFCPAssociationSetupRequest, error) {

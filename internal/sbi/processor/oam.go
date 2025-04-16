@@ -1,14 +1,15 @@
 package processor
 
 import (
-	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
+	"github.com/nycu-ucr/gonet/http"
 
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/pkg/factory"
+	"github.com/nycu-ucr/gin"
+
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/pkg/factory"
 )
 
 type PDUSessionInfo struct {

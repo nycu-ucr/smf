@@ -3,15 +3,16 @@ package processor
 import (
 	"context"
 	"fmt"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/nycu-ucr/gonet/http"
 
-	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/openapi/smf/EventExposure"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
+	"github.com/nycu-ucr/gin"
+
+	"github.com/nycu-ucr/openapi"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/openapi/smf/EventExposure"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
 )
 
 func (p *Processor) HandleChargingNotification(

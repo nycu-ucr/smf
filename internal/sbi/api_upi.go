@@ -1,12 +1,12 @@
 package sbi
 
 import (
-	"net/http"
+	"github.com/nycu-ucr/gonet/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/nycu-ucr/gin"
 
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/pkg/factory"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/pkg/factory"
 )
 
 func (s *Server) getUPIRoutes() []Route {

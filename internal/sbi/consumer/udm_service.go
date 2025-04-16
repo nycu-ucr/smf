@@ -7,13 +7,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
-	"github.com/free5gc/openapi/udm/UEContextManagement"
-	smf_context "github.com/free5gc/smf/internal/context"
-	"github.com/free5gc/smf/internal/logger"
-	"github.com/free5gc/smf/internal/util"
+	"github.com/nycu-ucr/openapi"
+	"github.com/nycu-ucr/openapi/models"
+	"github.com/nycu-ucr/openapi/udm/SubscriberDataManagement"
+	"github.com/nycu-ucr/openapi/udm/UEContextManagement"
+	smf_context "github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
+	"github.com/nycu-ucr/smf/internal/util"
 )
 
 type nudmService struct {
