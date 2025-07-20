@@ -473,7 +473,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 	}
 
 	tunnel := smContext.Tunnel
-	dcTunnel := smContext.Tunnel
+	dcTunnel := smContext.DCTunnel
 	pdrList := []*smf_context.PDR{}
 	farList := []*smf_context.FAR{}
 	barList := []*smf_context.BAR{}
@@ -661,7 +661,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 					farList = append(farList, ULPDR.FAR)
 				}
 			}
-		} 
+		}
 		sendPFCPModification = true
 		smContext.SetState(smf_context.PFCPModification)
 	case models.N2SmInfoType_PDU_RES_SETUP_FAIL:
