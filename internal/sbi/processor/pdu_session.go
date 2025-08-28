@@ -661,7 +661,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 					farList = append(farList, ULPDR.FAR)
 				}
 			}
-		}
+		} 
 		sendPFCPModification = true
 		smContext.SetState(smf_context.PFCPModification)
 	case models.N2SmInfoType_PDU_RES_SETUP_FAIL:
