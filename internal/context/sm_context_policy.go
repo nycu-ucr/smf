@@ -250,7 +250,7 @@ func (c *SMContext) ApplyPccRules(
 	return nil
 }
 
-func (c *SMContext) ApplyDcPccRulesOnDctunnel() error {
+func (c *SMContext) ApplyDcPccRulesOnDcTunnel() error {
 	if c.DCTunnel == nil {
 		c.Log.Errorf("DCTunnel is nil")
 		return fmt.Errorf("DCTunnel is nil")
@@ -355,8 +355,8 @@ func (c *SMContext) ApplyDcPccRulesOnDctunnel() error {
 			c.PreRemoveDataPath(pcc.Datapath)
 		}
 
-		if err := c.CreateDcPccRuleDataPathOnDctunnel(pcc, tcData, qosData, chgData); err != nil {
-			c.Log.Errorf("CreatePccRuleDataPathOnDCTunnel for PCCRule[%s] failed: %v", id, err)
+		if err := c.CreateDcPccRuleDataPathOnDcTunnel(pcc, tcData, qosData, chgData); err != nil {
+			c.Log.Errorf("CreatePccRuleDataPathOnDcTunnel for PCCRule[%s] failed: %v", id, err)
 			continue
 		}
 

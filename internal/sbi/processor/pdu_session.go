@@ -599,15 +599,15 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		if err = smf_context.
 			HandlePDUSessionResourceSetupResponseTransfer(body.BinaryDataN2SmInformation, smContext); err != nil {
 			smContext.Log.Errorf("Handle PDUSessionResourceSetupResponseTransfer failed: %+v", err)
-		} else if smContext.HasNRDCSupport {
+		} else if smContext.NrdcIndicator {
 			for _, pdr := range pdrList {
 				// Remove all PDRs except the default PDR
 				if pdr.Precedence != 255 {
 					pdr.State = smf_context.RULE_REMOVE
 				}
 			}
-			if err = smContext.ApplyDcPccRulesOnDctunnel(); err != nil {
-				smContext.Log.Errorf("ApplyPccRulesOnDctunnel failed: %+v", err)
+			if err = smContext.ApplyDcPccRulesOnDcTunnel(); err != nil {
+				smContext.Log.Errorf("ApplyDcPccRulesOnDcTunnel failed: %+v", err)
 			}
 			for _, dataPath := range dcTunnel.DataPathPool {
 				if dataPath.Activated {
@@ -661,7 +661,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 					farList = append(farList, ULPDR.FAR)
 				}
 			}
-		} 
+		}
 		sendPFCPModification = true
 		smContext.SetState(smf_context.PFCPModification)
 	case models.N2SmInfoType_PDU_RES_SETUP_FAIL:
@@ -1168,11 +1168,11 @@ func releaseSession(smContext *smf_context.SMContext) smf_context.PFCPSessionRes
 			return res.Status
 		}
 	}
-	if !smContext.HasNRDCSupport {
+	if !smContext.NrdcIndicator {
 		return smf_context.SessionReleaseSuccess
 	}
 
-	for _, res := range ReleaseDctunnel(smContext) {
+	for _, res := range ReleaseDcTunnel(smContext) {
 		if res.Status != smf_context.SessionReleaseSuccess {
 			return res.Status
 		}

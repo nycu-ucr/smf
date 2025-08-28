@@ -127,7 +127,7 @@ type SMContext struct {
 	LocalDLTeid                   uint32
 	LocalULTeidForSplitPDUSession uint32
 	LocalDLTeidForSplitPDUSession uint32
-	HasNRDCSupport                bool
+	NrdcIndicator                 bool
 
 	UpCnxState models.UpCnxState
 
@@ -363,7 +363,7 @@ func NewSMContext(id string, pduSessID int32) *SMContext {
 		return nil
 	}
 
-	smContext.HasNRDCSupport = false
+	smContext.NrdcIndicator = false
 
 	return smContext
 }
@@ -415,7 +415,7 @@ func RemoveSMContext(ref string) {
 	ReleaseTEID(smContext.LocalULTeidForSplitPDUSession)
 	ReleaseTEID(smContext.LocalDLTeidForSplitPDUSession)
 
-	smContext.HasNRDCSupport = false
+	smContext.NrdcIndicator = false
 
 	smContextPool.Delete(ref)
 	canonicalRef.Delete(canonicalName(smContext.Supi, smContext.PDUSessionID))
@@ -708,7 +708,7 @@ func (c *SMContext) CreatePccRuleDataPath(pccRule *PCCRule,
 	return nil
 }
 
-func (c *SMContext) CreateDcPccRuleDataPathOnDctunnel(pccRule *PCCRule,
+func (c *SMContext) CreateDcPccRuleDataPathOnDcTunnel(pccRule *PCCRule,
 	tcData *TrafficControlData, qosData *models.QosData,
 	chgData *models.ChargingData,
 ) error {
@@ -738,10 +738,10 @@ func (c *SMContext) CreateDcPccRuleDataPathOnDctunnel(pccRule *PCCRule,
 	}
 
 	createdDataPath.GBRFlow = isGBRFlow(qosData)
-	createdDataPath.ActivateDctunnelAndPDR(c, uint32(pccRule.Precedence))
+	createdDataPath.ActivateDcTunnelAndPDR(c, uint32(pccRule.Precedence))
 	c.DCTunnel.AddDataPath(createdDataPath)
 	pccRule.Datapath = createdDataPath
-	pccRule.AddDataPathForwardingParametersOnDctunnel(c, &targetRoute)
+	pccRule.AddDataPathForwardingParametersOnDcTunnel(c, &targetRoute)
 
 	if chgLevel, err := pccRule.IdentifyChargingLevel(); err != nil {
 		c.Log.Warnf("fail to identify charging level[%+v] for pcc rule[%s]", err, pccRule.PccRuleId)

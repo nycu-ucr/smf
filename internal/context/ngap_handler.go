@@ -49,34 +49,34 @@ func HandlePDUSessionResourceSetupResponseTransfer(b []byte, ctx *SMContext) err
 	}
 
 	QosFlowPerTNLInformation := resourceSetupResponseTransfer.DLQosFlowPerTNLInformation
-	var DCQosFlowPerTNLInfomationItem ngapType.QosFlowPerTNLInformationItem
+	var DCQosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
 	DCQosFlowPerTNLInformation := resourceSetupResponseTransfer.AdditionalDLQosFlowPerTNLInformation
 	if DCQosFlowPerTNLInformation != nil && len(DCQosFlowPerTNLInformation.List) > 0 {
-		ctx.HasNRDCSupport = true
-		DCQosFlowPerTNLInfomationItem = DCQosFlowPerTNLInformation.List[0]
+		ctx.NrdcIndicator = true
+		DCQosFlowPerTNLInformationItem = DCQosFlowPerTNLInformation.List[0]
 	}
 
 	if QosFlowPerTNLInformation.UPTransportLayerInformation.Present !=
 		ngapType.UPTransportLayerInformationPresentGTPTunnel {
 		return errors.New("resourceSetupResponseTransfer.QosFlowPerTNLInformation.UPTransportLayerInformation.Present")
 	}
-	if ctx.HasNRDCSupport && DCQosFlowPerTNLInfomationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present !=
+	if ctx.NrdcIndicator && DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present !=
 		ngapType.UPTransportLayerInformationPresentGTPTunnel {
 		return errors.New(
-			"resourceSetupResponseTransfer.AdditionalQosFlowPerTNLInformation."+
+			"resourceSetupResponseTransfer.AdditionalQosFlowPerTNLInformation." +
 				"QosFlowPerTNLInformation.UPTransportLayerInformation.Present")
 	}
 
 	GTPTunnel := QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel
 	DCGTPTunnel := &ngapType.GTPTunnel{}
-	if ctx.HasNRDCSupport {
-		DCGTPTunnel = DCQosFlowPerTNLInfomationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel
+	if ctx.NrdcIndicator {
+		DCGTPTunnel = DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel
 	}
 
 	ctx.Tunnel.UpdateANInformation(
 		GTPTunnel.TransportLayerAddress.Value.Bytes,
 		binary.BigEndian.Uint32(GTPTunnel.GTPTEID.Value))
-	if ctx.HasNRDCSupport {
+	if ctx.NrdcIndicator {
 		ctx.DCTunnel.UpdateANInformation(
 			DCGTPTunnel.TransportLayerAddress.Value.Bytes,
 			binary.BigEndian.Uint32(DCGTPTunnel.GTPTEID.Value))
