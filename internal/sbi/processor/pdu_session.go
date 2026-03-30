@@ -868,6 +868,14 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 				ANUPF := dataPath.FirstDPNode
 				DLPDR := ANUPF.DownLinkTunnel.PDR
 
+				// After path switch, restore DL forwarding (end HO buffering).
+				if DLPDR != nil && DLPDR.FAR != nil {
+					DLPDR.FAR.ApplyAction.Forw = true
+					DLPDR.FAR.ApplyAction.Buff = false
+					DLPDR.FAR.ApplyAction.Nocp = false
+					DLPDR.FAR.State = smf_context.RULE_UPDATE
+				}
+
 				pdrList = append(pdrList, DLPDR)
 				farList = append(farList, DLPDR.FAR)
 			}
@@ -920,6 +928,31 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			}
 		}
 		response.JsonData.HoState = models.HoState_PREPARING
+
+		// PFCP-driven buffering during handover: buffer downlink packets at UPF
+		// until the path switch completes.
+		for _, dataPath := range tunnel.DataPathPool {
+			if dataPath.Activated {
+				ANUPF := dataPath.FirstDPNode
+				DLPDR := ANUPF.DownLinkTunnel.PDR
+				if DLPDR == nil || DLPDR.FAR == nil {
+					smContext.Log.Warnf("Skip HO buffering: missing DL PDR/FAR")
+					continue
+				}
+
+				DLPDR.FAR.ApplyAction.Forw = false
+				DLPDR.FAR.ApplyAction.Buff = true
+				DLPDR.FAR.ApplyAction.Nocp = true
+				DLPDR.FAR.State = smf_context.RULE_UPDATE
+				farList = append(farList, DLPDR.FAR)
+				smContext.Log.Warnf("Handover buffering")
+			}
+		}
+
+		if len(farList) > 0 {
+			sendPFCPModification = true
+			smContext.SetState(smf_context.PFCPModification)
+		}
 	case models.HoState_PREPARED:
 		smContext.Log.Traceln("In HoState_PREPARED")
 		smContext.CheckState(smf_context.Active)
@@ -972,6 +1005,15 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			if dataPath.Activated {
 				ANUPF := dataPath.FirstDPNode
 				DLPDR := ANUPF.DownLinkTunnel.PDR
+
+				// HO completed: restore DL forwarding (BUFF->FORW).
+				if DLPDR != nil && DLPDR.FAR != nil {
+					DLPDR.FAR.ApplyAction.Forw = true
+					DLPDR.FAR.ApplyAction.Buff = false
+					DLPDR.FAR.ApplyAction.Nocp = false
+					DLPDR.FAR.State = smf_context.RULE_UPDATE
+					smContext.Log.Warnf("restore DL to forwarding after HO complete")
+				}
 
 				pdrList = append(pdrList, DLPDR)
 				farList = append(farList, DLPDR.FAR)
