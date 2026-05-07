@@ -35,10 +35,38 @@ func NewPCCRule(mPcc *models.PccRule) *PCCRule {
 
 func (r *PCCRule) FlowDescription() string {
 	if len(r.FlowInfos) > 0 {
-		// now 1 pcc rule only maps to 1 FlowInfo
+		// Backward-compatible fallback for legacy callers.
 		return r.FlowInfos[0].FlowDescription
 	}
 	return ""
+}
+
+func (r *PCCRule) FlowDescriptionsByDirection() (ulFlowDesc string, dlFlowDesc string) {
+	for _, fi := range r.FlowInfos {
+		switch fi.FlowDirection {
+		case models.FlowDirection_UPLINK:
+			if ulFlowDesc == "" {
+				ulFlowDesc = fi.FlowDescription
+			}
+		case models.FlowDirection_DOWNLINK:
+			if dlFlowDesc == "" {
+				dlFlowDesc = fi.FlowDescription
+			}
+		case models.FlowDirection_BIDIRECTIONAL:
+			if ulFlowDesc == "" {
+				ulFlowDesc = fi.FlowDescription
+			}
+			if dlFlowDesc == "" {
+				dlFlowDesc = fi.FlowDescription
+			}
+		}
+	}
+	return
+}
+
+func (r *PCCRule) HasFlowDescription() bool {
+	ul, dl := r.FlowDescriptionsByDirection()
+	return ul != "" || dl != ""
 }
 
 func (r *PCCRule) RefChgDataID() string {
@@ -70,7 +98,12 @@ func (r *PCCRule) RefTcDataID() string {
 }
 
 func (r *PCCRule) IdentifyChargingLevel() (ChargingLevel, error) {
-	dlIPFilterRule, err := flowdesc.Decode(r.FlowDescription())
+	_, dlFlowDesc := r.FlowDescriptionsByDirection()
+	if dlFlowDesc == "" {
+		// Fallback to legacy behavior if only one flow exists.
+		dlFlowDesc = r.FlowDescription()
+	}
+	dlIPFilterRule, err := flowdesc.Decode(dlFlowDesc)
 	if err != nil {
 		return 0, err
 	}
@@ -85,17 +118,25 @@ func (r *PCCRule) IdentifyChargingLevel() (ChargingLevel, error) {
 	}
 }
 
-func (r *PCCRule) UpdateDataPathFlowDescription(dlFlowDesc string) error {
+func (r *PCCRule) UpdateDataPathFlowDescription() error {
 	if r.Datapath == nil {
 		return fmt.Errorf("pcc[%s]: no data path", r.PccRuleId)
 	}
 
-	if dlFlowDesc == "" {
+	ulFlowDesc, dlFlowDesc := r.FlowDescriptionsByDirection()
+	if ulFlowDesc == "" && dlFlowDesc == "" {
 		return fmt.Errorf("pcc[%s]: no flow description", r.PccRuleId)
 	}
 
-	ulFlowDesc := dlFlowDesc
-	r.Datapath.UpdateFlowDescription(ulFlowDesc, dlFlowDesc) // UL, DL flow description should be same
+	// If only one direction is present, reuse it for the opposite direction.
+	if ulFlowDesc == "" {
+		ulFlowDesc = dlFlowDesc
+	}
+	if dlFlowDesc == "" {
+		dlFlowDesc = ulFlowDesc
+	}
+
+	r.Datapath.UpdateFlowDescription(ulFlowDesc, dlFlowDesc)
 	return nil
 }
 

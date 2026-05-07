@@ -450,8 +450,8 @@ func applyFlowInfoOrPFD(pcc *PCCRule) error {
 	}
 
 	// Apply flow description if it presents
-	if flowDesc := pcc.FlowDescription(); flowDesc != "" {
-		if err := pcc.UpdateDataPathFlowDescription(flowDesc); err != nil {
+	if pcc.HasFlowDescription() {
+		if err := pcc.UpdateDataPathFlowDescription(); err != nil {
 			return err
 		}
 		return nil
@@ -475,8 +475,13 @@ func applyFlowInfoOrPFD(pcc *PCCRule) error {
 		len(matchedPFD.Pfds[0].FlowDescriptions) == 0 {
 		return fmt.Errorf("No PFD matched for AppID [%s]", appID)
 	}
-	if err := pcc.UpdateDataPathFlowDescription(
-		matchedPFD.Pfds[0].FlowDescriptions[0]); err != nil {
+	pcc.FlowInfos = []models.FlowInformation{
+		{
+			FlowDescription: matchedPFD.Pfds[0].FlowDescriptions[0],
+			FlowDirection:   models.FlowDirection_BIDIRECTIONAL,
+		},
+	}
+	if err := pcc.UpdateDataPathFlowDescription(); err != nil {
 		return err
 	}
 	return nil
