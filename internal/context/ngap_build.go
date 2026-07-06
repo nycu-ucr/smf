@@ -418,9 +418,11 @@ func BuildPathSwitchRequestAcknowledgeTransfer(ctx *SMContext) ([]byte, error) {
 								ULNGUUPTNLInformation: ngapType.UPTransportLayerInformation{
 									Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
 									GTPTunnel: &ngapType.GTPTunnel{
-										TransportLayerAddress: aper.BitString{
-											Bytes:     dcN3IP,
-											BitLength: uint64(len(dcN3IP) * 8),
+										TransportLayerAddress: ngapType.TransportLayerAddress{
+											Value: aper.BitString{
+												Bytes:     dcN3IP,
+												BitLength: uint64(len(dcN3IP) * 8),
+											},
 										},
 										GTPTEID: ngapType.GTPTEID{
 											Value: dcTeidOct,
