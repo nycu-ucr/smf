@@ -142,8 +142,23 @@ func establishPfcpSession(smContext *smf_context.SMContext,
 
 	rsp := rcvMsg.PfcpMessage.Body.(pfcp.PFCPSessionEstablishmentResponse)
 	if rsp.UPFSEID != nil {
-		NodeIDtoIP := rsp.NodeID.ResolveNodeIdToIp().String()
-		pfcpSessionCtx := smContext.PFCPContext[NodeIDtoIP]
+		nodeIDToIP := rsp.NodeID.ResolveNodeIdToIp().String()
+		pfcpSessionCtx := smContext.PFCPContext[nodeIDToIP]
+		if pfcpSessionCtx == nil {
+			fallbackNodeIDToIP := state.upf.NodeID.ResolveNodeIdToIp().String()
+			pfcpSessionCtx = smContext.PFCPContext[fallbackNodeIDToIP]
+			if pfcpSessionCtx != nil && nodeIDToIP != "" && nodeIDToIP != fallbackNodeIDToIP {
+				smContext.PFCPContext[nodeIDToIP] = pfcpSessionCtx
+			}
+		}
+		if pfcpSessionCtx == nil {
+			logger.PduSessLog.Warnf("PFCP session context missing for response node [%s], creating fallback context from state.upf", nodeIDToIP)
+			pfcpSessionCtx = &smf_context.PFCPSessionContext{
+				PDRs:   make(map[uint16]*smf_context.PDR),
+				NodeID: state.upf.NodeID,
+			}
+			smContext.PFCPContext[state.upf.NodeID.ResolveNodeIdToIp().String()] = pfcpSessionCtx
+		}
 		pfcpSessionCtx.RemoteSEID = rsp.UPFSEID.Seid
 	}
 
