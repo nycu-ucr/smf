@@ -285,10 +285,11 @@ func BuildPDUSessionResourceModifyConfirmTransfer(ctx *SMContext, tunnel *UPTunn
 		}
 	}
 
-	// UL NG-U UP TNL Information
+	// UL NG-U UP TNL Information — use the tunnel's actual UL TEID
+	// so that DCTunnel gets LocalULTeidForSplitPDUSession, not the primary TEID.
 	ANUPF := tunnel.DataPathPool.GetDefaultPath().FirstDPNode
 	teidOct := make([]byte, 4)
-	binary.BigEndian.PutUint32(teidOct, ctx.LocalULTeid)
+	binary.BigEndian.PutUint32(teidOct, ANUPF.UpLinkTunnel.TEID)
 
 	confirmTransfer.ULNGUUPTNLInformation = ngapType.UPTransportLayerInformation{
 		Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
@@ -385,6 +386,71 @@ func BuildPathSwitchRequestAcknowledgeTransfer(ctx *SMContext) ([]byte, error) {
 			}
 		}
 	}
+	// NR-DC: add AdditionalNGUUPTNLInformation for the DC tunnel
+	if ctx.NrdcIndicator {
+		DCANUPF := ctx.DCTunnel.DataPathPool.GetDefaultPath().FirstDPNode
+		DCUpNode := DCANUPF.UPF
+
+		dcTeidOct := make([]byte, 4)
+		binary.BigEndian.PutUint32(dcTeidOct, DCANUPF.UpLinkTunnel.TEID)
+
+		dcN3IP, err := DCUpNode.N3Interfaces[0].IP(ctx.SelectedPDUSessionType)
+		if err != nil {
+			return nil, fmt.Errorf("DC tunnel N3 IP error: %s", err)
+		}
+
+		pathSwitchRequestAcknowledgeTransfer.IEExtensions =
+			new(ngapType.ProtocolExtensionContainerPathSwitchRequestAcknowledgeTransferExtIEs)
+		pathSwitchRequestAcknowledgeTransfer.IEExtensions.List = append(
+			pathSwitchRequestAcknowledgeTransfer.IEExtensions.List,
+			ngapType.PathSwitchRequestAcknowledgeTransferExtIEs{
+				Id: ngapType.ProtocolExtensionID{
+					Value: ngapType.ProtocolIEIDAdditionalNGUUPTNLInformation,
+				},
+				Criticality: ngapType.Criticality{
+					Value: ngapType.CriticalityPresentIgnore,
+				},
+				ExtensionValue: ngapType.PathSwitchRequestAcknowledgeTransferExtIEsExtensionValue{
+					Present: ngapType.PathSwitchRequestAcknowledgeTransferExtIEsPresentAdditionalNGUUPTNLInformation,
+					AdditionalNGUUPTNLInformation: &ngapType.UPTransportLayerInformationPairList{
+						List: []ngapType.UPTransportLayerInformationPairItem{
+							{
+								ULNGUUPTNLInformation: ngapType.UPTransportLayerInformation{
+									Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+									GTPTunnel: &ngapType.GTPTunnel{
+										TransportLayerAddress: ngapType.TransportLayerAddress{
+											Value: aper.BitString{
+												Bytes:     dcN3IP,
+												BitLength: uint64(len(dcN3IP) * 8),
+											},
+										},
+										GTPTEID: ngapType.GTPTEID{
+											Value: dcTeidOct,
+										},
+									},
+								},
+								DLNGUUPTNLInformation: ngapType.UPTransportLayerInformation{
+									Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+									GTPTunnel: &ngapType.GTPTunnel{
+										TransportLayerAddress: ngapConvert.IPAddressToNgap(
+											ctx.DCTunnel.ANInformation.IPAddress.String(), ""),
+										GTPTEID: ngapType.GTPTEID{
+											Value: func() aper.OctetString {
+												b := make([]byte, 4)
+												binary.BigEndian.PutUint32(b, ctx.DCTunnel.ANInformation.TEID)
+												return b
+											}(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		)
+	}
+
 	if buf, err := aper.MarshalWithParams(pathSwitchRequestAcknowledgeTransfer, "valueExt"); err != nil {
 		return nil, err
 	} else {

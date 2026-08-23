@@ -208,6 +208,26 @@ func HandlePathSwitchRequestTransfer(b []byte, ctx *SMContext) error {
 		GTPTunnel.TransportLayerAddress.Value.Bytes,
 		binary.BigEndian.Uint32(GTPTunnel.GTPTEID.Value))
 
+	// NR-DC: parse AdditionalDLQosFlowPerTNLInformation from IE extensions
+	if exts := pathSwitchRequestTransfer.IEExtensions; exts != nil {
+		for _, ieExt := range exts.List {
+			if ieExt.Id.Value == ngapType.ProtocolIEIDAdditionalDLQosFlowPerTNLInformation {
+				if dcList := ieExt.ExtensionValue.AdditionalDLQosFlowPerTNLInformation; dcList != nil && len(dcList.List) > 0 {
+					dcItem := dcList.List[0]
+					if dcItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present ==
+						ngapType.UPTransportLayerInformationPresentGTPTunnel {
+						dcGTPTunnel := dcItem.QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel
+						ctx.NrdcIndicator = true
+						ctx.DCTunnel.UpdateANInformation(
+							dcGTPTunnel.TransportLayerAddress.Value.Bytes,
+							binary.BigEndian.Uint32(dcGTPTunnel.GTPTEID.Value))
+						logger.PduSessLog.Infof("PathSwitch: DC tunnel updated with secondary gNB TEID")
+					}
+				}
+			}
+		}
+	}
+
 	ctx.UpSecurityFromPathSwitchRequestSameAsLocalStored = true
 
 	// Verify whether UP security in PathSwitchRequest same as SMF locally stored or not TS 33.501 6.6.1

@@ -7,6 +7,7 @@ import (
 	"github.com/nycu-ucr/pfcp"
 	"github.com/nycu-ucr/pfcp/pfcpType"
 	"github.com/nycu-ucr/smf/internal/context"
+	"github.com/nycu-ucr/smf/internal/logger"
 	"github.com/nycu-ucr/smf/internal/pfcp/udp"
 )
 
@@ -506,6 +507,8 @@ func BuildPfcpSessionModificationRequest(
 	urrList []*context.URR,
 ) (pfcp.PFCPSessionModificationRequest, error) {
 	msg := pfcp.PFCPSessionModificationRequest{}
+	createFarIDs := make(map[uint32]struct{})
+	updateFarIDs := make(map[uint32]struct{})
 
 	msg.UpdatePDR = make([]*pfcp.UpdatePDR, 0, 2)
 	msg.UpdateFAR = make([]*pfcp.UpdateFAR, 0, 2)
@@ -526,6 +529,16 @@ func BuildPfcpSessionModificationRequest(
 		switch pdr.State {
 		case context.RULE_INITIAL:
 			msg.CreatePDR = append(msg.CreatePDR, pdrToCreatePDR(pdr))
+			// In the NR-DC setup path, a freshly-created PDR can reference a FAR
+			// whose state has already been flipped to UPDATE by AN tunnel bookkeeping.
+			// Force the referenced FAR into CreateFAR for any CreatePDR so UPF-C
+			// never sees a new PDR that points to a FAR it has not created yet.
+			if pdr.FAR != nil && pdr.FAR.State != context.RULE_REMOVE {
+				if _, exists := createFarIDs[pdr.FAR.FARID]; !exists {
+					msg.CreateFAR = append(msg.CreateFAR, farToCreateFAR(pdr.FAR))
+					createFarIDs[pdr.FAR.FARID] = struct{}{}
+				}
+			}
 		case context.RULE_UPDATE:
 			msg.UpdatePDR = append(msg.UpdatePDR, pdrToUpdatePDR(pdr))
 		case context.RULE_REMOVE:
@@ -541,9 +554,15 @@ func BuildPfcpSessionModificationRequest(
 	for _, far := range farList {
 		switch far.State {
 		case context.RULE_INITIAL:
-			msg.CreateFAR = append(msg.CreateFAR, farToCreateFAR(far))
+			if _, exists := createFarIDs[far.FARID]; !exists {
+				msg.CreateFAR = append(msg.CreateFAR, farToCreateFAR(far))
+				createFarIDs[far.FARID] = struct{}{}
+			}
 		case context.RULE_UPDATE:
-			msg.UpdateFAR = append(msg.UpdateFAR, farToUpdateFAR(far))
+			if _, exists := updateFarIDs[far.FARID]; !exists {
+				msg.UpdateFAR = append(msg.UpdateFAR, farToUpdateFAR(far))
+				updateFarIDs[far.FARID] = struct{}{}
+			}
 		case context.RULE_REMOVE:
 			msg.RemoveFAR = append(msg.RemoveFAR, &pfcp.RemoveFAR{
 				FARID: &pfcpType.FARID{
@@ -591,6 +610,9 @@ func BuildPfcpSessionModificationRequest(
 		}
 		urr.State = context.RULE_CREATE
 	}
+
+	logger.PduSessLog.Infof("PFCP modification IE counts: createPDR=%d createFAR=%d updatePDR=%d updateFAR=%d removePDR=%d removeFAR=%d",
+		len(msg.CreatePDR), len(msg.CreateFAR), len(msg.UpdatePDR), len(msg.UpdateFAR), len(msg.RemovePDR), len(msg.RemoveFAR))
 
 	return msg, nil
 }

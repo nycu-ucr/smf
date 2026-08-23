@@ -881,6 +881,19 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			}
 		}
 
+		// NR-DC: also update DC tunnel's DL FAR with new secondary gNB info
+		if smContext.NrdcIndicator && smContext.DCTunnel != nil {
+			for _, dataPath := range smContext.DCTunnel.DataPathPool {
+				if dataPath.Activated {
+					ANUPF := dataPath.FirstDPNode
+					DLPDR := ANUPF.DownLinkTunnel.PDR
+
+					pdrList = append(pdrList, DLPDR)
+					farList = append(farList, DLPDR.FAR)
+				}
+			}
+		}
+
 		sendPFCPModification = true
 		smContext.SetState(smf_context.PFCPModification)
 	case models.N2SmInfoType_PATH_SWITCH_SETUP_FAIL:
